@@ -1,0 +1,35 @@
+diff --git a/node_expire.install b/node_expire.install
+index b083f7a..e837dc7 100644
+--- a/node_expire.install
++++ b/node_expire.install
+@@ -66,12 +66,13 @@ function node_expire_uninstall() {
+   // drupal_uninstall_schema('node_expire').
+   //
+   // Delete global variable.
+-  \Drupal::config('node_expire.settings')->clear('node_expire_ntypes')->save();
++  $config = \Drupal::configFactory()->getEditable('node_expire.settings');
++  $config->clear('node_expire_ntypes')->save();
+ 
+   // Delete configuration variables.
+-  \Drupal::config('node_expire.settings')->clear('node_expire_handle_content_expiry')->save();
+-  \Drupal::config('node_expire.settings')->clear('node_expire_date_entry_elements')->save();
+-  \Drupal::config('node_expire.settings')->clear('node_expire_past_date_allowed')->save();
++  $config->clear('node_expire_handle_content_expiry')->save();
++  $config->clear('node_expire_date_entry_elements')->save();
++  $config->clear('node_expire_past_date_allowed')->save();
+ 
+   // Delete node type related variables.
+   $types = node_type_get_types();
+diff --git a/src/Form/NodeExpireAdminSettings.php b/src/Form/NodeExpireAdminSettings.php
+index c9fde98..3efa325 100644
+--- a/src/Form/NodeExpireAdminSettings.php
++++ b/src/Form/NodeExpireAdminSettings.php
+@@ -116,7 +116,7 @@ class NodeExpireAdminSettings extends ConfigFormBase {
+     return parent::buildForm($form, $form_state);
+   }
+ 
+-  public function validateForm(array &$form, \Drupal\Core\Form\FormStateInterface &$form_state) {
++  public function validateForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+     if ($form_state->getValue(['node_expire_date_entry_elements']) == 1 && $form_state->getValue(['node_expire_handle_content_expiry']) != 0 && !\Drupal::moduleHandler()->moduleExists('date_popup')) {
+       $form_state->setErrorByName('date_entry_elements', t('To use "Date popups" option Date module should be installed with Date Popup enabled.'));
+     }

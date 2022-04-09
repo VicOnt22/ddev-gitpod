@@ -1,0 +1,8 @@
+name: 'Node Expire'
+description: 'Set a timer into your content, allowing you to perform customized actions.'
+core_version_requirement: ^8 || ^9
+package: Workflow
+dependencies:
+  - rules:rules
+type: module
+

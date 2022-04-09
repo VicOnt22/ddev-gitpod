@@ -1,0 +1,11 @@
+name            = Node expire extras
+description     = Node expire extras.
+core = 7.x
+package         = Workflow
+dependencies:
+  - rules:rules
+  - token:token
+  - node_expire:node_expire
+files[] = includes/node_expire_extras.inc
+
+

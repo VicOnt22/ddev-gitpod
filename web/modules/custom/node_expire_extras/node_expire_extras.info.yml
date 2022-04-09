@@ -1,0 +1,10 @@
+name: 'Node Expire Extras'
+description: 'Node expire extras.'
+core_version_requirement: ^8 || ^9
+package: Workflow
+dependencies:
+  - rules:rules
+  - token:token
+  - node_expire:node_expire
+type: module
+
