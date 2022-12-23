@@ -1,0 +1,14 @@
+uuid: 9640490c-daf0-4d34-b039-9dc8420e36ea
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: vymHlgJy26BuI5GGj9-IXjwR3dRC5C0tij4BpWJnoqw
+id: feedback
+label: 'Website feedback'
+recipients:
+  - nodexpire@selectfix.com
+reply: ''
+weight: 0
+message: 'Your message has been sent.'
+redirect: ''
