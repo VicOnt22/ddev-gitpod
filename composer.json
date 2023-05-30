@@ -18,9 +18,6 @@
         "composer/installers": "^1.9",
         "drupal/core-composer-scaffold": "^9",
         "drupal/core-recommended": "^9",
-        "drupal/entity": "^1.2",
-        "drupal/rules": "^3.0@alpha",
-        "drupal/token": "^1.10",
         "drush/drush": "^10.3"
     },
     "conflict": {
