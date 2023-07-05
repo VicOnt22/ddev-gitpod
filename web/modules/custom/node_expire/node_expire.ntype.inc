@@ -9,13 +9,13 @@
  * Implements hook_form_alter().
  */
 function _node_expire_form_node_type_form_alter_validate(&$form, &$form_state) {
-  $node_expire = &$form_state['values']['node_expire'];
+  $node_expire = &$form_state->getValue('node_expire');
   if (!empty($node_expire) and !strtotime($node_expire)) {
     form_set_error('node_expire',
       t('This values should be in PHP <a href="http://www.php.net/strtotime" target="_blank">strtotime format</a>.'));
   }
 
-  $node_expire_max = &$form_state['values']['node_expire_max'];
+  $node_expire_max = &$form_state->getValue('node_expire_max');
   if (!empty($node_expire_max)) {
     if (!strtotime($node_expire_max)) {
       form_set_error('node_expire_max',
@@ -27,7 +27,7 @@ function _node_expire_form_node_type_form_alter_validate(&$form, &$form_state) {
     }
   }
 
-  $node_expire_required = &$form_state['values']['node_expire_required'];
+  $node_expire_required = &$form_state->getValue('node_expire_required');
   if (!empty($node_expire_required)) {
     if (empty($node_expire)) {
       form_set_error('node_expire',
@@ -48,12 +48,12 @@ $ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
 
   $handle_content_expiry = \Drupal::config('node_expire.settings')->get('node_expire_handle_content_expiry');
   if ($handle_content_expiry != 0) {
-    $ntypes[$form_state['values']['type']]['enabled']   = $form_state['values']['node_expire_enabled'];
+    $ntypes[[$form_state->getValue('type')]['enabled']]   = $form_state->getValue('node_expire_enabled');
   }
 
-  $ntypes[$form_state['values']['type']]['default']   = $form_state['values']['node_expire'];
-  $ntypes[$form_state['values']['type']]['max']       = $form_state['values']['node_expire_max'];
-  $ntypes[$form_state['values']['type']]['required']  = $form_state['values']['node_expire_required'];
+  $ntypes[[$form_state->getValue('type')]['default']]   = $form_state->getValue('node_expire');
+  $ntypes[[$form_state->getValue('type')]['max']]       = $form_state->getValue('node_expire_max');
+  $ntypes[[$form_state->getValue('type')]['required']]  = $form_state->getValue('node_expire_required');
 
   \Drupal::config('node_expire.settings')->set('node_expire_ntypes', $ntypes)->save();
 }
