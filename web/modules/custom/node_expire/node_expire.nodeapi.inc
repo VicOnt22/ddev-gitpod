@@ -29,7 +29,7 @@ $ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
   // For nodes with node_expire enabled, fetch information from the database.
   if (!empty($node_expire_enabled)) {
     $handle_content_expiry = \Drupal::config('node_expire.settings')->get('node_expire_handle_content_expiry');
-    $result = db_query(
+    $result = \Drupal::database()->query(
       'SELECT n.nid, n.type, expire, expired, lastnotify
        FROM {node} n
          INNER JOIN {node_expire} ne
@@ -198,7 +198,7 @@ function _node_expire_node_update_insert(&$ntype, \Drupal\node\NodeInterface $no
  */
 function _node_expire_write_record($node_expire, $nid) {
   // Check, is it insert or update.
-  $cnt = db_query(
+  $cnt = \Drupal::database()->query(
     'SELECT count(nid)
      FROM {node_expire} ne
      WHERE ne.nid = :nid',
