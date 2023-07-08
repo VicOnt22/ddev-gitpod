@@ -1,0 +1,6 @@
+_core:
+  default_config_hash: _G6E0XN0SZNr3uunLeNg8xknf4ZnJyCWeVJoA7JPDn8
+node_expire_handle_content_expiry: 2
+node_expire_date_entry_elements: 0
+node_expire_past_date_allowed: 0
+node_expire_ntypes: article
