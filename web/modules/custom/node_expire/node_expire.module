@@ -5,7 +5,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\AlterableInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-
+use Drupal\node\Entity\Node;
 /**
  * @file
  * Set a timer into your content, allowing you to perform customized actions.
@@ -104,7 +104,8 @@ function node_expire_form_node_type_form_alter(&$form, &$form_state) {
 // not scalar. You'll need to provide a default value in
 // config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
 $ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
-    $node_type  = $form['#node_type']->type;
+//    $node_type  = $form['#node_type']->type;
+    $node_type  = $form['type']['#default_value'];
     $handle_content_expiry = \Drupal::config('node_expire.settings')->get('node_expire_handle_content_expiry');
     if ($handle_content_expiry != 0) {
       $form['workflow']['node_expire_enabled'] = array(
@@ -183,10 +184,12 @@ $ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
 /**
  * Implements hook_node_load().
  */
-function node_expire_node_load($nodes=[], $types=[]) {
+//function node_expire_node_load($nodes=[], $types=[]) {
+function node_expire_node_load($nodes) {
   \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
   // _node_expire_node_load($ntypes, $nodes, $types);
-  _node_expire_node_load($nodes, $types);
+//  _node_expire_node_load($nodes, $types);
+  _node_expire_node_load($nodes);
 }
 
 /**

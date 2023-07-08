@@ -8,7 +8,8 @@
 /**
  * Implements hook_node_load().
  */
-function _node_expire_node_load($nodes, $types) {
+//function _node_expire_node_load($nodes, $types) {
+function _node_expire_node_load($nodes) {
   // Only deal with node types that have the Node expire feature enabled.
   // @FIXME
   // Could not extract the default value because it is either indeterminate, or
