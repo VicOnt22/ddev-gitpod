@@ -46,4 +46,4 @@ function node_expire_extras_update_expire($node) {
   $wrapper->save();
 }
 
-module_load_include('inc', 'node_expire_extras', 'includes/node_expire_extras');
+\Drupal::moduleHandler()->loadInclude('node_expire_extras', 'inc', 'includes/node_expire_extras');

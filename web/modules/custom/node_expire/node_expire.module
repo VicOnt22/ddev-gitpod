@@ -64,7 +64,6 @@ function node_expire_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('node_expire_admin_settings'),
     'access arguments' => array('administer site configuration'),
-    'type' => MENU_NORMAL_ITEM,
     'file' => 'node_expire.admin.inc',
     'weight' => 2,
   );
@@ -88,7 +87,7 @@ if ((isset($form['type'])) &&
     ($ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes')) &&
     (isset($ntypes[$form['type']['#value']])) &&
     ($ntype = $ntypes[$form['type']['#value']])) {
-    module_load_include('nodeapi.inc', 'node_expire');
+  \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
     _node_expire_form_alter_nodeform($ntype, $form, $form_state, $form_id);
   }
 }
@@ -175,7 +174,7 @@ $ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
       );
     }
     // Add special validate/submit functions.
-    module_load_include('ntype.inc', 'node_expire');
+    \Drupal::moduleHandler()->loadInclude('node_expire', 'ntype.inc');
     $form['#validate'][]  = '_node_expire_form_node_type_form_alter_validate';
     $form['#submit'][]    = '_node_expire_form_node_type_form_alter_submit';
   }
@@ -184,8 +183,8 @@ $ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
 /**
  * Implements hook_node_load().
  */
-function node_expire_node_load($nodes, $types) {
-  module_load_include('nodeapi.inc', 'node_expire');
+function node_expire_node_load($nodes=[], $types=[]) {
+  \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
   // _node_expire_node_load($ntypes, $nodes, $types);
   _node_expire_node_load($nodes, $types);
 }
@@ -206,7 +205,7 @@ $ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
   if (!$ntype = $ntypes[$node->type]) {
     return;
   }
-  module_load_include('nodeapi.inc', 'node_expire');
+  \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
   _node_expire_node_prepare($ntype, $node);
 }
 
@@ -226,7 +225,7 @@ $ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
   if (!$ntype = $ntypes[$node->type]) {
     return;
   }
-  module_load_include('nodeapi.inc', 'node_expire');
+  \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
   _node_expire_node_validate($ntype, $node);
 }
 
@@ -246,7 +245,7 @@ $ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
   if (!$ntype = $ntypes[$node->type]) {
     return;
   }
-  module_load_include('nodeapi.inc', 'node_expire');
+  \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
   _node_expire_node_update_insert($ntype, $node);
 }
 
@@ -266,7 +265,7 @@ $ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
   if (!$ntype = $ntypes[$node->type]) {
     return;
   }
-  module_load_include('nodeapi.inc', 'node_expire');
+  \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
   _node_expire_node_update_insert($ntype, $node);
 }
 
@@ -286,7 +285,7 @@ $ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
   if (!$ntype = $ntypes[$node->type]) {
     return;
   }
-  module_load_include('nodeapi.inc', 'node_expire');
+  \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
   _node_expire_node_delete($ntype, $node);
 }
 

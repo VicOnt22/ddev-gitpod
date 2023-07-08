@@ -11,22 +11,27 @@
 function _node_expire_node_load($nodes, $types) {
   // Only deal with node types that have the Node expire feature enabled.
   // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
-$ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
-  $node_expire_enabled = array();
+  // Could not extract the default value because it is either indeterminate, or
+  // not scalar. You'll need to provide a default value in
+  // config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
+  $ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
+  $node_expire_enabled = [];
 
   // Check if node_expire are enabled for each node.
   // If node_expires are not enabled, do nothing.
+
   foreach ($nodes as $node) {
     // Store whether node_expires are enabled for this node.
-    if ((isset($ntypes[$node->type])) and ($ntypes = $ntypes[$node->type])) {
-      $node_expire_enabled[] = $node->nid;
+    $stop=1;
+    if (!empty($node->type)) {
+      if ((isset($ntypes[$node->type])) and ($ntypes = $ntypes[$node->type])) {
+        $node_expire_enabled[] = $node->nid;
+      }
     }
   }
 
-  // For nodes with node_expire enabled, fetch information from the database.
+
+// For nodes with node_expire enabled, fetch information from the database.
   if (!empty($node_expire_enabled)) {
     $handle_content_expiry = \Drupal::config('node_expire.settings')->get('node_expire_handle_content_expiry');
     $result = \Drupal::database()->query(

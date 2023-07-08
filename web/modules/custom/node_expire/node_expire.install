@@ -75,33 +75,33 @@ function node_expire_uninstall() {
   $config->clear('node_expire_past_date_allowed')->save();
 
   // Delete node type related variables.
-  $types = node_type_get_types();
-  foreach ($types as $type) {
-    // @FIXME
-// // @FIXME
-// // The correct configuration object could not be determined. You'll need to
-// // rewrite this call manually.
-// variable_del('node_expire_' . $type->type);
-
-    // @FIXME
-// // @FIXME
-// // The correct configuration object could not be determined. You'll need to
-// // rewrite this call manually.
-// variable_del('node_expire_enabled_' . $type->type);
-
-    // @FIXME
-// // @FIXME
-// // The correct configuration object could not be determined. You'll need to
-// // rewrite this call manually.
-// variable_del('node_expire_max_' . $type->type);
-
-    // @FIXME
-// // @FIXME
-// // The correct configuration object could not be determined. You'll need to
-// // rewrite this call manually.
-// variable_del('node_expire_required_' . $type->type);
-
-  }
+//  $types = node_type_get_types();
+//  foreach ($types as $type) {
+//    // @FIXME
+//// // @FIXME
+//// // The correct configuration object could not be determined. You'll need to
+//// // rewrite this call manually.
+//// variable_del('node_expire_' . $type->type);
+//
+//    // @FIXME
+//// // @FIXME
+//// // The correct configuration object could not be determined. You'll need to
+//// // rewrite this call manually.
+//// variable_del('node_expire_enabled_' . $type->type);
+//
+//    // @FIXME
+//// // @FIXME
+//// // The correct configuration object could not be determined. You'll need to
+//// // rewrite this call manually.
+//// variable_del('node_expire_max_' . $type->type);
+//
+//    // @FIXME
+//// // @FIXME
+//// // The correct configuration object could not be determined. You'll need to
+//// // rewrite this call manually.
+//// variable_del('node_expire_required_' . $type->type);
+//
+//  }
 
 }
 

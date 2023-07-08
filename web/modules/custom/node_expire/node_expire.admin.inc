@@ -44,7 +44,7 @@ function node_expire_admin_settings() {
   );
 
   // Variable node_expire_date_entry_elements is not used in legacy mode,
-  // so in legacy mode it is safe to keep any of it's value.
+  // so in legacy mode it is safe to keep any of its value.
   // It is necessary just to take care about proper validation
   // (see node_expire_admin_settings_validate below).
   $form['date_entry_elements'] = array(

@@ -10,6 +10,7 @@ namespace Drupal\node_expire\Form;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Link;
 
 class NodeExpireAdminSettings extends ConfigFormBase {
 
@@ -23,29 +24,12 @@ class NodeExpireAdminSettings extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
-    $config = $this->config('node_expire.settings');
-
-    foreach (Element::children($form) as $variable) {
-      $config->set($variable, $form_state->getValue($form[$variable]['#parents']));
-    }
-    $config->save();
-
-    if (method_exists($this, '_submitForm')) {
-      $this->_submitForm($form, $form_state);
-    }
-
-    parent::submitForm($form, $form_state);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   protected function getEditableConfigNames() {
     return ['node_expire.settings'];
   }
 
-  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state) {
+    $config = $this->config('node_expire.settings');
     $form['handle_content_expiry'] = [
       '#type' => 'fieldset',
       '#title' => t('Handle content expiry'),
@@ -70,14 +54,14 @@ class NodeExpireAdminSettings extends ConfigFormBase {
         ':input[name="node_expire_handle_content_expiry"]' => [
           [
             'value' => '1'
-            ],
+          ],
           ['value' => '2'],
         ]
-        ]
-      ];
+      ]
+    ];
 
     // Variable node_expire_date_entry_elements is not used in legacy mode,
-    // so in legacy mode it is safe to keep any of it's value.
+    // so in legacy mode it is safe to keep any of its value.
     // It is necessary just to take care about proper validation
     // (see node_expire_admin_settings_validate below).
     $form['date_entry_elements'] = [
@@ -115,6 +99,26 @@ class NodeExpireAdminSettings extends ConfigFormBase {
     // End of node_expire_admin_settings().
     return parent::buildForm($form, $form_state);
   }
+
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    $config = $this->config('node_expire.settings');
+
+    foreach (Element::children($form) as $variable) {
+      $config->set($variable, $form_state->getValue($form[$variable]['#parents']));
+    }
+    $config->save();
+
+    if (method_exists($this, '_submitForm')) {
+      $this->_submitForm($form, $form_state);
+    }
+
+    parent::submitForm($form, $form_state);
+  }
+
 
   public function validateForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
     if ($form_state->getValue(['node_expire_date_entry_elements']) == 1 && $form_state->getValue(['node_expire_handle_content_expiry']) != 0 && !\Drupal::moduleHandler()->moduleExists('date_popup')) {
