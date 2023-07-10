@@ -6,6 +6,7 @@ use Drupal\Core\Database\Query\AlterableInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\Entity\Node;
+use Symfony\Component\HttpFoundation\Request;
 /**
  * @file
  * Set a timer into your content, allowing you to perform customized actions.
@@ -22,7 +23,7 @@ define('NODE_EXPIRE_NO_EXPIRE', 2145934800);
  * Implements hook_cron().
  */
 function node_expire_cron() {
-  $handle_content_expiry = \Drupal::config('node_expire.settings')->get('node_expire_handle_content_expiry');
+  $handle_content_expiry = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_handle_content_expiry');
   if ($handle_content_expiry != 2) {
     $result = \Drupal::database()->query('SELECT n.nid FROM {node} n
       JOIN {node_expire} ne ON n.nid = ne.nid
@@ -84,7 +85,7 @@ function node_expire_form_alter(&$form, \Drupal\Core\Form\FormStateInterface &$f
 if ((isset($form['type'])) &&
     (isset($form['type']['#value'])) &&
     ($form['type']['#value'] . '_node_form' == $form_id) &&
-    ($ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes')) &&
+    ($ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes')) &&
     (isset($ntypes[$form['type']['#value']])) &&
     ($ntype = $ntypes[$form['type']['#value']])) {
   \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
@@ -97,87 +98,95 @@ if ((isset($form['type'])) &&
  *
  * Enable/Disable expiration feature on node types
  */
-function node_expire_form_node_type_form_alter(&$form, &$form_state) {
+//function node_expire_form_node_type_form_alter(&$form, FormStateInterface &$form_state) {
+function node_expire_form_node_type_form_alter(&$form, FormStateInterface &$form_state, $form_id) {
   if (\Drupal::currentUser()->hasPermission('administer node expire')) {
     // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
-$ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
-//    $node_type  = $form['#node_type']->type;
-    $node_type  = $form['type']['#default_value'];
-    $handle_content_expiry = \Drupal::config('node_expire.settings')->get('node_expire_handle_content_expiry');
+    // Could not extract the default value because it is either indeterminate, or
+    // not scalar. You'll need to provide a default value in
+    // config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
+    $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')
+      ->get('node_expire_ntypes');
+    //    $node_type  = $form['#node_type']->type;
+    $node_type = $form['type']['#default_value'];
+    $handle_content_expiry = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')
+      ->get('node_expire_handle_content_expiry');
     if ($handle_content_expiry != 0) {
-      $form['workflow']['node_expire_enabled'] = array(
+      $form['workflow']['node_expire_enabled'] = [
         '#title' => t('Enable Node Expiry'),
         '#description' => t('Allow nodes to expire after a certain amount of time.'),
         '#type' => 'checkbox',
         '#default_value' => empty($ntypes[$node_type]['enabled']) ? '' : $ntypes[$node_type]['enabled'],
-      );
+      ];
 
       // Visibility.
-      $states = array(
-        'visible' => array(
-          ':input[name="node_expire_enabled"]' => array('checked' => TRUE),
-        ),
-      );
+      $states = [
+        'visible' => [
+          ':input[name="node_expire_enabled"]' => ['checked' => TRUE],
+        ],
+      ];
 
-      $form['workflow']['node_expire_container'] = array(
+      $form['workflow']['node_expire_container'] = [
         '#type' => 'fieldset',
         '#title' => t('Node Expire'),
         '#collapsible' => FALSE,
         '#collapsed' => FALSE,
         '#states' => $states,
-      );
+      ];
 
       // Text fields.
-      $form['workflow']['node_expire_container']['node_expire'] = array(
+      $form['workflow']['node_expire_container']['node_expire'] = [
         '#title' => t('Default expiration date'),
-        '#description' => t('Default date to consider the node expired.') . ' ' . t('Format: PHP <a href="http://www.php.net/strtotime" target="_blank">strtotime format</a>.'),
+        '#description' => t('Default date to consider the node expired.') . ' ' . t('Format: PHP <a href="https://www.php.net/manual/en/function.strtotime.php" target="_blank">strtotime format</a>.') . ' ' . t('ex: 5 May 2023, or +1 week'),
         '#type' => 'textfield',
         '#default_value' => empty($ntypes[$node_type]['default']) ? '' : $ntypes[$node_type]['default'],
         '#states' => $states,
-      );
-      $form['workflow']['node_expire_container']['node_expire_max'] = array(
+      ];
+      $form['workflow']['node_expire_container']['node_expire_max'] = [
         '#title' => t('Expiration date limit'),
-        '#description' => t('The max date to consider the node expired.') . ' ' . t('Format: PHP <a href="http://www.php.net/strtotime" target="_blank">strtotime format</a>.') . ' ' . t('Leave it blank if this there is no limit date.'),
+        '#description' => t('The max date to consider the node expired.') . ' ' . t('Format: PHP <a href="https://www.php.net/manual/en/function.strtotime.php" target="_blank">strtotime format</a>.') . ' ' . t('Leave it blank if this there is no limit date.'),
         '#type' => 'textfield',
         '#default_value' => empty($ntypes[$node_type]['max']) ? '' : $ntypes[$node_type]['max'],
         '#states' => $states,
-      );
+      ];
 
-      $form['workflow']['node_expire_container']['node_expire_required'] = array(
+      $form['workflow']['node_expire_container']['node_expire_required'] = [
         '#title' => t('Expiration date required'),
         '#type' => 'checkbox',
         '#default_value' => !empty($ntypes[$node_type]['required']),
         '#states' => $states,
-      );
+      ];
     }
     else {
-      $form['workflow']['node_expire'] = array(
+      $form['workflow']['node_expire'] = [
         '#title' => t('Default expiration date'),
-        '#description' => t('Default date to consider the node expired.') . ' ' . t('Format: PHP <a href="http://www.php.net/strtotime" target="_blank">strtotime format</a>.') . ' ' . t('Leave it blank if this content type never expires.'),
+        '#description' => t('Default date to consider the node expired.') . ' ' . t('Format: PHP <a href="https://www.php.net/manual/en/function.strtotime.php" target="_blank">strtotime format</a>.') . ' ' . t('ex: now or, next Monday. Leave it blank if this content type never expires.'),
         '#type' => 'textfield',
 
         '#default_value' => empty($ntypes[$node_type]['default']) ? '' : $ntypes[$node_type]['default'],
-      );
-      $form['workflow']['node_expire_max'] = array(
+      ];
+      $form['workflow']['node_expire_max'] = [
         '#title' => t('Expiration date limit'),
-        '#description' => t('The max date to consider the node expired.') . ' ' . t('Format: PHP <a href="http://www.php.net/strtotime" target="_blank">strtotime format</a>.') . ' ' . t('Leave it blank if this there is no limit date.'),
+        '#description' => t('The max date to consider the node expired.') . ' ' . t('Format: PHP <a href="https://www.php.net/manual/en/function.strtotime.php" target="_blank">strtotime format</a>.') . ' ' . t('Leave it blank if this there is no limit date.'),
         '#type' => 'textfield',
 
         '#default_value' => empty($ntypes[$node_type]['max']) ? '' : $ntypes[$node_type]['max'],
-      );
-      $form['workflow']['node_expire_required'] = array(
+      ];
+      $form['workflow']['node_expire_required'] = [
         '#title' => t('Expiration date required'),
         '#type' => 'checkbox',
         '#default_value' => !empty($ntypes[$node_type]['required']),
-      );
+      ];
     }
     // Add special validate/submit functions.
     \Drupal::moduleHandler()->loadInclude('node_expire', 'ntype.inc');
-    $form['#validate'][]  = '_node_expire_form_node_type_form_alter_validate';
-    $form['#submit'][]    = '_node_expire_form_node_type_form_alter_submit';
+    $form['#validate'][] = '_node_expire_form_node_type_form_alter_validate';
+    //    $form['#submit'][]    = '_node_expire_form_node_type_form_alter_submit';
+    foreach (array_keys($form['actions']) as $action) {
+      if ($action != 'preview' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
+        $form['actions'][$action]['#submit'][] = '_node_expire_form_node_type_form_alter_submit';
+      }
+    }
   }
 }
 
@@ -201,11 +210,12 @@ function node_expire_node_prepare_form($node) {
 // Could not extract the default value because it is either indeterminate, or
 // not scalar. You'll need to provide a default value in
 // config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
-$ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
-  if (!isset($ntypes[$node->type])) {
+$ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
+
+  if (!isset($ntypes[$node->getType()])) {
     return;
   }
-  if (!$ntype = $ntypes[$node->type]) {
+  if (!$ntype = $ntypes[$node->getType()]) {
     return;
   }
   \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
@@ -221,11 +231,12 @@ function node_expire_node_validate(\Drupal\node\NodeInterface $node) {
 // Could not extract the default value because it is either indeterminate, or
 // not scalar. You'll need to provide a default value in
 // config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
-$ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
-  if (!isset($ntypes[$node->type])) {
+$ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
+$stop=1;
+  if (!isset($ntypes[$node->getType()])) {
     return;
   }
-  if (!$ntype = $ntypes[$node->type]) {
+  if (!$ntype = $ntypes[$node->getType()]) {
     return;
   }
   \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
@@ -241,11 +252,12 @@ function node_expire_node_update(\Drupal\node\NodeInterface $node) {
 // Could not extract the default value because it is either indeterminate, or
 // not scalar. You'll need to provide a default value in
 // config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
-$ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
-  if (!isset($ntypes[$node->type])) {
+$ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
+  $stop=1;
+  if (!isset($ntypes[$node->getType()])) {
     return;
   }
-  if (!$ntype = $ntypes[$node->type]) {
+  if (!$ntype = $ntypes[$node->getType()]) {
     return;
   }
   \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
@@ -261,11 +273,12 @@ function node_expire_node_insert(\Drupal\node\NodeInterface $node) {
 // Could not extract the default value because it is either indeterminate, or
 // not scalar. You'll need to provide a default value in
 // config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
-$ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
-  if (!isset($ntypes[$node->type])) {
+$ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
+  $stop=1;
+  if (!isset($ntypes[$node->getType()])) {
     return;
   }
-  if (!$ntype = $ntypes[$node->type]) {
+  if (!$ntype = $ntypes[$node->getType()]) {
     return;
   }
   \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
@@ -281,11 +294,12 @@ function node_expire_node_delete(\Drupal\node\NodeInterface $node) {
 // Could not extract the default value because it is either indeterminate, or
 // not scalar. You'll need to provide a default value in
 // config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
-$ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
-  if (!isset($ntypes[$node->type])) {
+$ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
+$stop=1;
+  if (!isset($ntypes[$node->getType()])) {
     return;
   }
-  if (!$ntype = $ntypes[$node->type]) {
+  if (!$ntype = $ntypes[$node->getType()]) {
     return;
   }
   \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
@@ -364,11 +378,11 @@ function _node_expire_get_date_entry_elements() {
   }
 
   // Legacy mode.
-  if (\Drupal::config('node_expire.settings')->get('node_expire_handle_content_expiry') == 0) {
+  if (\Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_handle_content_expiry') == 0) {
     return 0;
   }
 
-  return \Drupal::config('node_expire.settings')->get('node_expire_date_entry_elements');
+  return \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_date_entry_elements');
 }
 
 /**
@@ -384,4 +398,4 @@ function node_expire_debug($data = array()) {
   \Drupal::logger('node_expire')->notice('<pre>' . print_r($data, TRUE) . '</pre>', []);
 }
 
-module_load_include('ntype.inc', 'node_expire');
+//\Drupal::moduleHandler()->loadInclude('node_expire', 'ntype.inc');

@@ -21,7 +21,7 @@ function node_expire_admin_settings() {
   $form['handle_content_expiry']['node_expire_handle_content_expiry'] = array(
     '#type'          => 'radios',
     '#title'         => t('Handle content expiry'),
-    '#default_value' => \Drupal::config('node_expire.settings')->get('node_expire_handle_content_expiry'),
+    '#default_value' => \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_handle_content_expiry'),
     '#options'       => array(
       0 => t('In legacy mode'),
       1 => t('Trigger "Content Expired" event every cron run when the node is expired'),
@@ -76,7 +76,7 @@ function node_expire_admin_settings() {
   $form['past_date_allowed']['node_expire_past_date_allowed'] = array(
     '#type'          => 'checkbox',
     '#title'         => t('Allow expire date in the past'),
-    '#default_value' => \Drupal::config('node_expire.settings')->get('node_expire_past_date_allowed'),
+    '#default_value' => \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_past_date_allowed'),
     '#description'   => t('Checking this box will allow to save nodes with expire date in the past. This is helpful during site development and testing.'),
   );
 
@@ -96,7 +96,7 @@ function node_expire_admin_settings_validate($form, &$form_state) {
   if ($form_state['values']['node_expire_date_entry_elements'] == 1 &&
     $form_state['values']['node_expire_handle_content_expiry'] != 0 &&
     !\Drupal::moduleHandler()->moduleExists('date_popup')) {
-    form_set_error('date_entry_elements',
+    $form_state->setErrorByName('date_entry_elements',
       t('To use "Date popups" option Date module should be installed with Date Popup enabled.')
       // . ' ' . t('This option is not available in legacy mode.')
     );

@@ -39,7 +39,7 @@ class NodeExpireAdminSettings extends ConfigFormBase {
     $form['handle_content_expiry']['node_expire_handle_content_expiry'] = [
       '#type' => 'radios',
       '#title' => t('Handle content expiry'),
-      '#default_value' => \Drupal::config('node_expire.settings')->get('node_expire_handle_content_expiry'),
+      '#default_value' => \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_handle_content_expiry'),
       '#options' => [
         0 => t('In legacy mode'),
         1 => t('Trigger "Content Expired" event every cron run when the node is expired'),
@@ -92,7 +92,7 @@ class NodeExpireAdminSettings extends ConfigFormBase {
     $form['past_date_allowed']['node_expire_past_date_allowed'] = [
       '#type' => 'checkbox',
       '#title' => t('Allow expire date in the past'),
-      '#default_value' => \Drupal::config('node_expire.settings')->get('node_expire_past_date_allowed'),
+      '#default_value' => \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_past_date_allowed'),
       '#description' => t('Checking this box will allow to save nodes with expire date in the past. This is helpful during site development and testing.'),
     ];
 

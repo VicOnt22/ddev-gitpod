@@ -4,6 +4,8 @@
  * @file
  * Node API integration.
  */
+use Drupal\node\Entity;
+use Drupal\node\NodeInterface;
 
 /**
  * Implements hook_node_load().
@@ -15,7 +17,7 @@ function _node_expire_node_load($nodes) {
   // Could not extract the default value because it is either indeterminate, or
   // not scalar. You'll need to provide a default value in
   // config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
-  $ntypes = \Drupal::config('node_expire.settings')->get('node_expire_ntypes');
+  $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
   $node_expire_enabled = [];
 
   // Check if node_expire are enabled for each node.
@@ -23,26 +25,27 @@ function _node_expire_node_load($nodes) {
 
   foreach ($nodes as $node) {
     // Store whether node_expires are enabled for this node.
-    $stop=1;
-    if (!empty($node->type)) {
-      if ((isset($ntypes[$node->type])) and ($ntypes = $ntypes[$node->type])) {
-        $node_expire_enabled[] = $node->nid;
+    $nodeType=$node->getType();
+    if (!empty($nodeType)) {
+      if ((isset($ntypes[$nodeType])) and ($ntypes = $ntypes[$nodeType])) {
+        $node_expire_enabled[] = $node->nid->value;
       }
     }
   }
 
-
 // For nodes with node_expire enabled, fetch information from the database.
   if (!empty($node_expire_enabled)) {
-    $handle_content_expiry = \Drupal::config('node_expire.settings')->get('node_expire_handle_content_expiry');
+    $handle_content_expiry = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_handle_content_expiry');
     $result = \Drupal::database()->query(
       'SELECT n.nid, n.type, expire, expired, lastnotify
        FROM {node} n
          INNER JOIN {node_expire} ne
            ON n.nid = ne.nid
        WHERE n.nid
-         IN (:node_expire_enabled)',
-      array(':node_expire_enabled' => $node_expire_enabled));
+         IN (' . implode(',', array_map('intval', $node_expire_enabled)) . ')');
+
+// https://stackoverflow.com/questions/4037145/mysql-how-to-select-rows-where-value-is-in-array
+
     foreach ($result as $record) {
       if ($handle_content_expiry == 0) {
         $nodes[$record->nid]->expire = $record->expire;
@@ -62,13 +65,14 @@ function _node_expire_node_load($nodes) {
  */
 function _node_expire_node_prepare(&$ntype, \Drupal\node\NodeInterface $node) {
   // To prevent default value 1969-12-31 check also $ntypes['default'].
+$stop=1;
   if (!isset($node->expire) && $ntype['default']) {
-    $node->expire = format_date(strtotime($ntype['default']), 'custom', NODE_EXPIRE_FORMAT);
+    $node->expire = \Drupal::service('date.formatter')->format(strtotime($ntype['default']), 'custom', NODE_EXPIRE_FORMAT);
   }
   // This gives a way to users without edit exipration permission
   // to update nodes with default expiration.
   if (isset($node->expire) && !\Drupal::currentUser()->hasPermission('edit node expire')) {
-    $node->expire = format_date(strtotime($ntype['default']), 'custom', NODE_EXPIRE_FORMAT);
+    $node->expire = \Drupal::service('date.formatter')->format(strtotime($ntype['default']), 'custom', NODE_EXPIRE_FORMAT);
   }
 }
 
@@ -76,7 +80,8 @@ function _node_expire_node_prepare(&$ntype, \Drupal\node\NodeInterface $node) {
  * Implements hook_node_validate().
  */
 function _node_expire_node_validate(&$ntype, \Drupal\node\NodeInterface $node) {
-  $handle_content_expiry = \Drupal::config('node_expire.settings')->get('node_expire_handle_content_expiry');
+  $handle_content_expiry = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_handle_content_expiry');
+  $stop=1;
   if ($handle_content_expiry != 0) {
     if (!isset($ntype['enabled']) || !$ntype['enabled']) {
       return;
@@ -90,15 +95,16 @@ function _node_expire_node_validate(&$ntype, \Drupal\node\NodeInterface $node) {
     }
   }
   elseif (!$expire = strtotime($node->expire) or $expire <= 0) {
-    form_set_error('expire_date', t('You have to specify a valid expiration date.'));
+//    form_set_error('expire_date', t('You have to specify a valid expiration date.'));
+    $form_state->setErrorByName('expire_date', t('You have to specify a valid expiration date.'));
   }
-  elseif (\Drupal::config('node_expire.settings')->get('node_expire_past_date_allowed') == 0 && $expire <= REQUEST_TIME) {
+  elseif (\Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_past_date_allowed') == 0 && $expire <= \Drupal::time()->getRequestTime()) {
     form_set_error('expire_date', t("You can't expire a node in the past!"));
   }
   elseif (!empty($ntype['max']) and $expire > strtotime($ntype['max'], $node->getCreatedTime())) {
     form_set_error('expire_date', t('It must expire before %date.',
     array(
-      '%date' => format_date(strtotime($ntype['max'], $node->getCreatedTime()), 'custom', NODE_EXPIRE_FORMAT),
+      '%date' => \Drupal::service('date.formatter')->format(strtotime($ntype['max'], $node->getCreatedTime()), 'custom', NODE_EXPIRE_FORMAT),
     )));
   }
 }
@@ -107,18 +113,19 @@ function _node_expire_node_validate(&$ntype, \Drupal\node\NodeInterface $node) {
  * Implements hook_node_update() and hook_node_insert().
  */
 function _node_expire_node_update_insert(&$ntype, \Drupal\node\NodeInterface $node) {
-  $handle_content_expiry = \Drupal::config('node_expire.settings')->get('node_expire_handle_content_expiry');
+  $handle_content_expiry = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_handle_content_expiry');
+  $stop=1;
   if ($handle_content_expiry == 0) {
     // Old (legacy) style of processing.
     // Has the expiration been removed, or does it exist?
     if (isset($node->expire)) {
-      db_delete('node_expire')
+      \Drupal::database()->delete('node_expire')
         ->condition('nid', $node->id())
         ->execute();
       // Should we create a new record?
       if ($node->expire) {
-        if (strtotime($node->expire)) {
-          $node->expire = strtotime($node->expire);
+        if (\Drupal::service('date.formatter')->format(strtotime($node->expire))) {
+          $node->expire = \Drupal::service('date.formatter')->format(strtotime($node->expire));
         }
         $node->expired = FALSE;
         \Drupal::database()->insert('node_expire')->fields($node)->execute();
@@ -217,7 +224,7 @@ function _node_expire_write_record($node_expire, $nid) {
   }
   else {
     // Update.
-    \Drupal::database()->merge('node_expire')->fields($node_expire)->key(['nid'])->execute();
+    \Drupal::database()->merge('node_expire')->fields($node_expire)->key('nid')->execute();
   }
 }
 
@@ -225,7 +232,7 @@ function _node_expire_write_record($node_expire, $nid) {
  * Implements hook_node_delete().
  */
 function _node_expire_node_delete(&$ntype, \Drupal\node\NodeInterface $node) {
-  db_delete('node_expire')
+  \Drupal::database()->delete('node_expire')
     ->condition('nid', $node->id())
     ->execute();
 }
@@ -238,16 +245,17 @@ function _node_expire_node_delete(&$ntype, \Drupal\node\NodeInterface $node) {
  */
 function _node_expire_form_alter_nodeform(&$ntype, &$form, &$form_state, $form_id) {
   // Check if the Node expire feature is enabled for the node type.
+  $stop=1;
   $node = isset($form['#node']) ? $form['#node'] : NULL;
-
-  $handle_content_expiry = \Drupal::config('node_expire.settings')->get('node_expire_handle_content_expiry');
+  $stop=1;
+  $handle_content_expiry = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_handle_content_expiry');
   if ($handle_content_expiry != 0) {
     if (empty($ntype['enabled'])) {
       return;
     }
     // Replace not set to default string.
     if (!isset($node->expire)) {
-      // $ntype = isset($ntypes[$node->type]) ? $ntypes[$node->type] : NULL;
+      $ntype = isset($ntypes[$node->getType()]) ? $ntypes[$node->getType()] : NULL;
       $node->expire = _node_expire_date_db_to_str('', $ntype);
     }
   }
@@ -256,9 +264,9 @@ function _node_expire_form_alter_nodeform(&$ntype, &$form, &$form_state, $form_i
     if (!isset($node->expire)) {
       $node->expire = '';
     }
-    // Convert the timestamp into a human readable date - legacy branch.
+    // Convert the timestamp into a human-readable date - legacy branch.
     if (is_numeric($node->expire)) {
-      $node->expire = format_date($node->expire, 'custom', NODE_EXPIRE_FORMAT);
+      $node->expire = \Drupal::service('date.formatter')->format($node->expire, 'custom', NODE_EXPIRE_FORMAT);
     }
   }
 
@@ -273,7 +281,7 @@ function _node_expire_form_alter_nodeform(&$ntype, &$form, &$form_state, $form_i
         '#title' => t('Expiration date'),
         '#description' => t('Time date to consider the node expired. Format: %time (YYYY-MM-DD).',
           array(
-            '%time' => format_date(REQUEST_TIME, 'custom', NODE_EXPIRE_FORMAT),
+            '%time' => \Drupal::service('date.formatter')->format(\Drupal::time()->getRequestTime(), 'custom', NODE_EXPIRE_FORMAT),
           )
         ),
         '#type' => 'date_popup',
@@ -288,7 +296,7 @@ function _node_expire_form_alter_nodeform(&$ntype, &$form, &$form_state, $form_i
         '#title' => t('Expiration date'),
         '#description' => t('Time date to consider the node expired. Format: %time (YYYY-MM-DD).',
           array(
-            '%time' => format_date(REQUEST_TIME, 'custom', NODE_EXPIRE_FORMAT),
+            '%time' => \Drupal::service('date.formatter')->format(\Drupal::time()->getRequestTime(), 'custom', NODE_EXPIRE_FORMAT),
           )
         ),
         '#type' => 'textfield',
