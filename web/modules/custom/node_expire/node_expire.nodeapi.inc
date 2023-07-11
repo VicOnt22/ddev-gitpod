@@ -42,11 +42,12 @@ function _node_expire_node_load($nodes) {
          INNER JOIN {node_expire} ne
            ON n.nid = ne.nid
        WHERE n.nid
-         IN (' . implode(',', array_map('intval', $node_expire_enabled)) . ')');
+         IN (' . implode(",", array_map("intval", $node_expire_enabled)) . ')');
 
 // https://stackoverflow.com/questions/4037145/mysql-how-to-select-rows-where-value-is-in-array
 
     foreach ($result as $record) {
+      $stop=1;
       if ($handle_content_expiry == 0) {
         $nodes[$record->nid]->expire = $record->expire;
       }
@@ -114,11 +115,12 @@ function _node_expire_node_validate(&$ntype, \Drupal\node\NodeInterface $node) {
  */
 function _node_expire_node_update_insert(&$ntype, \Drupal\node\NodeInterface $node) {
   $handle_content_expiry = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_handle_content_expiry');
-  $stop=1;
+$stop=1;
   if ($handle_content_expiry == 0) {
     // Old (legacy) style of processing.
     // Has the expiration been removed, or does it exist?
     if (isset($node->expire)) {
+
       \Drupal::database()->delete('node_expire')
         ->condition('nid', $node->id())
         ->execute();
@@ -128,7 +130,17 @@ function _node_expire_node_update_insert(&$ntype, \Drupal\node\NodeInterface $no
           $node->expire = \Drupal::service('date.formatter')->format(strtotime($node->expire));
         }
         $node->expired = FALSE;
-        \Drupal::database()->insert('node_expire')->fields($node)->execute();
+        if(isset($node->lastnotify)) {
+          $lastnotify=$node->lastnotify;
+        }else{
+          $lastnotify = 0;
+        }
+        \Drupal::database()->insert('node_expire')->fields([
+          'nid' => $node->id(),
+          'expire' => $node->expire,
+          'expired' => $node->expired,
+          'lastnotify' => $lastnotify,
+        ])->execute();
       }
     }
   }
@@ -202,6 +214,7 @@ function _node_expire_node_update_insert(&$ntype, \Drupal\node\NodeInterface $no
     }
 
     // Write the record.
+//    _node_expire_write_record($node_expire, $node->id());
     _node_expire_write_record($node_expire, $node->id());
   }
 }
@@ -210,22 +223,44 @@ function _node_expire_node_update_insert(&$ntype, \Drupal\node\NodeInterface $no
  * Writes node_expire record.
  */
 function _node_expire_write_record($node_expire, $nid) {
+  $stop=1;
+  $intnid= (int) $nid;
   // Check, is it insert or update.
-  $cnt = \Drupal::database()->query(
-    'SELECT count(nid)
-     FROM {node_expire} ne
-     WHERE ne.nid = :nid',
-    array(':nid' => $nid))->fetchField();
+
+//  $cnt = \Drupal::database()->query(
+//    'SELECT count(nid)
+//     FROM {node_expire} ne
+//     WHERE ne.nid = :nid',
+//    array(':nid' => $intnid))->fetchField();
 
   // Write the record.
-  if ($cnt == 0) {
-    // Insert.
-    \Drupal::database()->insert('node_expire')->fields($node_expire)->execute();
-  }
-  else {
-    // Update.
-    \Drupal::database()->merge('node_expire')->fields($node_expire)->key('nid')->execute();
-  }
+//  if ($cnt == 0) {
+//    // Insert.
+//    \Drupal::database()->insert('node_expire')->fields([
+//      'nid' => $intnid,
+//      'expire' => $node_expire->expire,
+//      'expired' => $node_expire->expired,
+//      'lastnotify' => $node_expire->lastnotify,
+//    ])->execute();
+//  }
+//  else {
+//    // Update.
+//    \Drupal::database()->merge('node_expire')->fields([
+//      'nid' => $intnid,
+//      'expire' => $node_expire->expire,
+//      'expired' => $node_expire->expired,
+//      'lastnotify' => $node_expire->lastnotify,
+//    ])->key('nid')->execute();
+//  }
+
+  // merge automatcally execute "UPSERT" queries, a combination of UPDATE if 'key' exist and INSERT if key value not exist.
+      \Drupal::database()->merge('node_expire')
+        ->key('nid', $intnid)
+        ->fields([
+        'expire' => $node_expire->expire,
+        'expired' => $node_expire->expired,
+        'lastnotify' => $node_expire->lastnotify,
+      ])->execute();
 }
 
 /**

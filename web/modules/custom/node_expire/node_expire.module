@@ -12,12 +12,12 @@ use Symfony\Component\HttpFoundation\Request;
  * Set a timer into your content, allowing you to perform customized actions.
  */
 
-define('NODE_EXPIRE_FORMAT', 'Y-m-d');
-define('NODE_EXPIRE_FORMAT_JS', 'yy-mm-dd');
+const NODE_EXPIRE_FORMAT = 'Y-m-d';
+const NODE_EXPIRE_FORMAT_JS = 'yy-mm-dd';
 // define('NODE_EXPIRE_COMMON_DEFAULT_DATE', '2038-01-01');
 // Will be placed to the "expire" field corresponding empty
 // ("never expire") strings. 2145934800 is 2038-01-01.
-define('NODE_EXPIRE_NO_EXPIRE', 2145934800);
+const NODE_EXPIRE_NO_EXPIRE = 2145934800;
 
 /**
  * Implements hook_cron().
@@ -107,10 +107,11 @@ function node_expire_form_node_type_form_alter(&$form, FormStateInterface &$form
     // config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
     $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')
       ->get('node_expire_ntypes');
-    //    $node_type  = $form['#node_type']->type;
+
     $node_type = $form['type']['#default_value'];
     $handle_content_expiry = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')
       ->get('node_expire_handle_content_expiry');
+
     if ($handle_content_expiry != 0) {
       $form['workflow']['node_expire_enabled'] = [
         '#title' => t('Enable Node Expiry'),
@@ -398,4 +399,4 @@ function node_expire_debug($data = array()) {
   \Drupal::logger('node_expire')->notice('<pre>' . print_r($data, TRUE) . '</pre>', []);
 }
 
-//\Drupal::moduleHandler()->loadInclude('node_expire', 'ntype.inc');
+\Drupal::moduleHandler()->loadInclude('node_expire', 'ntype.inc');
