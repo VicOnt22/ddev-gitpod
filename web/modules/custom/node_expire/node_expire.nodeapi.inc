@@ -27,7 +27,7 @@ function _node_expire_node_load($nodes) {
     // Store whether node_expires are enabled for this node.
     $nodeType=$node->getType();
     if (!empty($nodeType)) {
-      if ((isset($ntypes[$nodeType])) and ($ntypes = $ntypes[$nodeType])) {
+      if ((isset($ntypes[$nodeType])) and ($ntypes[$nodeType]['enabled'])) {
         $node_expire_enabled[] = $node->nid->value;
       }
     }
@@ -68,13 +68,18 @@ function _node_expire_node_prepare(&$ntype, \Drupal\node\NodeInterface $node) {
   // To prevent default value 1969-12-31 check also $ntypes['default'].
 $stop=1;
   if (!isset($node->expire) && $ntype['default']) {
-    $node->expire = \Drupal::service('date.formatter')->format(strtotime($ntype['default']), 'custom', NODE_EXPIRE_FORMAT);
+    $node->expire = \Drupal::service('date.formatter')->format(intval(strtotime($ntype['default'])), 'custom', NODE_EXPIRE_FORMAT);
+  }elseif (isset($node->expire) && $ntype['default'] && !\Drupal::currentUser()->hasPermission('edit node expire')) {
+  // This gives a way to users without edit exipration permission to update nodes with default expiration.
+    $node->expire = \Drupal::service('date.formatter')->format(intval(strtotime($ntype['default'])), 'custom', NODE_EXPIRE_FORMAT);
+  }elseif (!isset($node->expire)){
+    $node->expire = '';
   }
-  // This gives a way to users without edit exipration permission
-  // to update nodes with default expiration.
-  if (isset($node->expire) && !\Drupal::currentUser()->hasPermission('edit node expire')) {
-    $node->expire = \Drupal::service('date.formatter')->format(strtotime($ntype['default']), 'custom', NODE_EXPIRE_FORMAT);
-  }
+   // Make sure the 'expire' property is set on the node, which wouldn't happen
+   // if one of the above conditions failed. it seems that is last elseif() already doing, so we commented below two lines
+//   if (!property_exists($node, 'expire')) {
+//     $node->expire = NULL;
+//   }
 }
 
 /**
@@ -102,10 +107,10 @@ function _node_expire_node_validate(&$ntype, \Drupal\node\NodeInterface $node) {
   elseif (\Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_past_date_allowed') == 0 && $expire <= \Drupal::time()->getRequestTime()) {
     form_set_error('expire_date', t("You can't expire a node in the past!"));
   }
-  elseif (!empty($ntype['max']) and $expire > strtotime($ntype['max'], $node->getCreatedTime())) {
+  elseif (!empty($ntype['max']) and $expire > strtotime(intval($ntype['max']), $node->getCreatedTime())) {
     form_set_error('expire_date', t('It must expire before %date.',
     array(
-      '%date' => \Drupal::service('date.formatter')->format(strtotime($ntype['max'], $node->getCreatedTime()), 'custom', NODE_EXPIRE_FORMAT),
+      '%date' => \Drupal::service('date.formatter')->format(intval(strtotime($ntype['max']), $node->getCreatedTime()), 'custom', NODE_EXPIRE_FORMAT),
     )));
   }
 }
@@ -301,7 +306,7 @@ function _node_expire_form_alter_nodeform(&$ntype, &$form, &$form_state, $form_i
     }
     // Convert the timestamp into a human-readable date - legacy branch.
     if (is_numeric($node->expire)) {
-      $node->expire = \Drupal::service('date.formatter')->format($node->expire, 'custom', NODE_EXPIRE_FORMAT);
+      $node->expire = \Drupal::service('date.formatter')->format(intval($node->expire), 'custom', NODE_EXPIRE_FORMAT);
     }
   }
 
@@ -322,7 +327,7 @@ function _node_expire_form_alter_nodeform(&$ntype, &$form, &$form_state, $form_i
         '#type' => 'date_popup',
         '#date_format' => NODE_EXPIRE_FORMAT,
         '#required' => $ntype['required'],
-        '#default_value' => $node->expire,
+        '#default_value' => intval($node->expire),
       );
     }
     else {
