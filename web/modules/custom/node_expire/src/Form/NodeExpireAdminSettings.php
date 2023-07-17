@@ -29,6 +29,9 @@ class NodeExpireAdminSettings extends ConfigFormBase {
   }
 
   public function buildForm(array $form, FormStateInterface $form_state) {
+    // Form constructor.
+    $form = parent::buildForm($form, $form_state);
+    // Default settings.
     $config = $this->config('node_expire.settings');
     $form['handle_content_expiry'] = [
       '#type' => 'fieldset',
@@ -97,7 +100,7 @@ class NodeExpireAdminSettings extends ConfigFormBase {
     ];
 
     // End of node_expire_admin_settings().
-    return parent::buildForm($form, $form_state);
+    return $form;
   }
 
 
@@ -105,18 +108,22 @@ class NodeExpireAdminSettings extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $config = $this->config('node_expire.settings');
 
-    foreach (Element::children($form) as $variable) {
-      $config->set($variable, $form_state->getValue($form[$variable]['#parents']));
-    }
+    $config = $this->config('node_expire.settings');
+    $config->set('node_expire_handle_content_expiry', $form_state->getValue('node_expire_handle_content_expiry'));
+    $config->set('node_expire_handle_content_expiry', $form_state->getValue('node_expire_handle_content_expiry'));
+    $config->set('node_expire_past_date_allowed', $form_state->getValue('node_expire_past_date_allowed'));
     $config->save();
 
-    if (method_exists($this, '_submitForm')) {
-      $this->_submitForm($form, $form_state);
-    }
-
-    parent::submitForm($form, $form_state);
+//    foreach (Element::children($form) as $variable) {
+//      $config->set($variable, $form_state->getValue($form[$variable]['#parents']));
+//    }
+//
+//    if (method_exists($this, '_submitForm')) {
+//      $this->_submitForm($form, $form_state);
+//    }
+    
+     parent::submitForm($form, $form_state);
   }
 
 
