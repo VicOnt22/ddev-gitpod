@@ -5,6 +5,8 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\AlterableInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\rules\Event\EntityEvent;
 use Drupal\node\Entity\Node;
 use Symfony\Component\HttpFoundation\Request;
 /**
@@ -54,6 +56,25 @@ function node_expire_cron() {
   }
 
 }
+
+/**
+ * Implements hook_entity_expire().
+ *
+ * This invokes event created in EntityNodeExpireDeriver // rules_invoke_event() in D9
+ *                                                          to replace in node_expire_cron()
+ */
+function node_expire_rules_event_entity_expire(EntityInterface $entity) {
+//function node_expire_cron(EntityInterface $entity) {
+
+  if ($entity instanceof ContentEntityInterface) {
+    $entity_type_id = $entity->getEntityTypeId();
+    $event = new EntityEvent($entity, [$entity_type_id => $entity]);
+    $event_dispatcher = \Drupal::service('event_dispatcher');
+//    $event_dispatcher->dispatch("node_expire_event_entity_expire:$entity_type_id", $event);
+    $event_dispatcher->dispatch("node_expire_action_unset_expired:$entity_type_id", $event);
+  }
+}
+
 
 /**
  * Implements hook_menu().
@@ -374,7 +395,7 @@ function node_expire_set_expired($nid) {
  */
 function _node_expire_get_date_entry_elements() {
   // No date_popup module.
-  if (!\Drupal::moduleHandler()->moduleExists('date_popup')) {
+  if (!\Drupal::moduleHandler()->moduleExists('datetime')) {
     return 0;
   }
 
@@ -400,3 +421,7 @@ function node_expire_debug($data = array()) {
 }
 
 \Drupal::moduleHandler()->loadInclude('node_expire', 'ntype.inc');
+
+
+
+

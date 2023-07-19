@@ -1,0 +1,4 @@
+node_expire_entity_expire:
+  label: 'Entity content expired'
+  deriver: '\Drupal\node_expire\Plugin\RulesEvent\EntityNodeExpireDeriver'
+  class: '\Drupal\rules\EventHandler\ConfigurableEventHandlerEntityBundle'

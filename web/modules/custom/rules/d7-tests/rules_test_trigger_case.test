@@ -47,7 +47,7 @@ class RulesTriggerTestCase extends DrupalWebTestCase {
   function testReactiveRuleCreation() {
     $rule = $this->createTestRule();
     $rule->save();
-    $result = \Drupal::database()->query("SELECT event FROM {rules_trigger} WHERE id = :id", array(':id' => $rule->id));
+    $result = db_query("SELECT event FROM {rules_trigger} WHERE id = :id", array(':id' => $rule->id));
     $this->assertEqual($result->fetchField(), 'node_presave', 'Associated event has been saved.');
     // Try updating.
     $rule->removeEvent('node_presave');
@@ -55,11 +55,11 @@ class RulesTriggerTestCase extends DrupalWebTestCase {
     $rule->event('node_update');
     $rule->active = FALSE;
     $rule->integrityCheck()->save();
-    $result = \Drupal::database()->query("SELECT event FROM {rules_trigger} WHERE id = :id", array(':id' => $rule->id));
+    $result = db_query("SELECT event FROM {rules_trigger} WHERE id = :id", array(':id' => $rule->id));
     $this->assertEqual($result->fetchCol(), array_values($rule->events()), 'Updated associated events.');
     // Try deleting.
     $rule->delete();
-    $result = \Drupal::database()->query("SELECT event FROM {rules_trigger} WHERE id = :id", array(':id' => $rule->id));
+    $result = db_query("SELECT event FROM {rules_trigger} WHERE id = :id", array(':id' => $rule->id));
     $this->assertEqual($result->fetchField(), FALSE, 'Deleted associated events.');
   }
 

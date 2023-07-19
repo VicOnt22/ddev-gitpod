@@ -6,7 +6,9 @@
  */
 
 /**
- * Implements hook_rules_action_info().
+ * Implements hook_rules_action_info().  //D9 Write a <modulename>/src/Plugin/RulesAction/<actionname>.php class
+ *                                        for each action that the module defines. Make this class
+ *                                        extend \Drupal\rules\Core\RulesActionBase.
  *
  * @ingroup rules
  */
@@ -19,21 +21,23 @@ function node_expire_rules_action_info() {
       'label' => t('Unset the expired flag'),
       'module' => 'node_expire',
     ),
+
     'node_expire_update_lastnotify' => array(
       'arguments' => array(
-        'node' => array(
-          'type' => 'node',
-          'label' => t('content expired'),
+        'node' => array('type' => 'node','label' => t('content expired'),
         ),
       ),
       'label' => t('Update lastnotify'),
       'module' => 'node_expire',
     ),
+
   );
 }
 
 /**
- * Implements hook_rules_condition_info().
+ * Implements hook_rules_condition_info().   // D9 Write a
+ *                                              <modulename>/src/Plugin/Condition/<conditionname>.php
+ *                                              class for each condition
  *
  * @ingroup rules
  */
@@ -69,27 +73,27 @@ function node_expire_rules_condition_info() {
   );
 }
 
-/**
- * Implements hook_rules_event_info().
- *
- * @ingroup rules
- */
-function node_expire_rules_event_info() {
-  $events['node_expired'] = array(
-    'label' => t('content expired'),
-    'group' => t('Node'),
-    'variables' => array(
-      'node' => array(
-        'type' => 'node',
-        'label' => t('Node'),
-      ),
-    ),
-  );
-  return $events;
-}
+///**
+// * Implements hook_rules_event_info().
+// *
+// * @ingroup rules
+// */
+//function node_expire_rules_event_info() {
+//  $events['node_expired'] = array(
+//    'label' => t('content expired'),
+//    'group' => t('Node'),
+//    'variables' => array(
+//      'node' => array(
+//        'type' => 'node',
+//        'label' => t('Node'),
+//      ),
+//    ),
+//  );
+//  return $events;
+//}
 
 /**
- * Checks if the node has the the "Expired" flag on.
+ * Checks if the node has the "Expired" flag on.
  *
  * @param object $node
  *   The Node object.
@@ -101,7 +105,7 @@ function node_expire_rules_expired_check($node) {
 /**
  * Checks lastnotify.
  *
- * Checks if the node has the the "Expired" flag on
+ * Checks if the node has the "Expired" flag on
  * and lastnotify greater than or equal to 2 weeks.
  *
  * @param object $node
@@ -114,7 +118,7 @@ function node_expire_rules_expired_check_lastnotify($node) {
 /**
  * Checks lastnotify is set.
  *
- * Checks if the node has the the "Expired" flag on
+ * Checks if the node has the "Expired" flag on
  * and lastnotify is set.
  *
  * @param object $node

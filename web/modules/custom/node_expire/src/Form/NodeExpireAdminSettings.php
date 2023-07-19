@@ -12,6 +12,10 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Link;
 
+
+/**
+ * Custom Settings Form extends ConfigFormBase
+ */
 class NodeExpireAdminSettings extends ConfigFormBase {
 
   /**
@@ -28,6 +32,13 @@ class NodeExpireAdminSettings extends ConfigFormBase {
     return ['node_expire.settings'];
   }
 
+
+  /**
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @return array
+   */
   public function buildForm(array $form, FormStateInterface $form_state) {
     // Form constructor.
     $form = parent::buildForm($form, $form_state);
@@ -105,13 +116,26 @@ class NodeExpireAdminSettings extends ConfigFormBase {
 
 
   /**
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @return void
+   */
+  public function validateForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+    if ($form_state->getValue(['node_expire_date_entry_elements']) == 1 && $form_state->getValue(['node_expire_handle_content_expiry']) != 0 && !\Drupal::moduleHandler()->moduleExists('datetime')) {
+      $form_state->setErrorByName('date_entry_elements', t('To use "Date popups" option Datetime module should be installed from Core.'));
+    }
+    // End of node_expire_admin_settings_validate().
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
     $config = $this->config('node_expire.settings');
     $config->set('node_expire_handle_content_expiry', $form_state->getValue('node_expire_handle_content_expiry'));
-    $config->set('node_expire_handle_content_expiry', $form_state->getValue('node_expire_handle_content_expiry'));
+    $config->set('node_expire_date_entry_elements', $form_state->getValue('node_expire_date_entry_elements'));
     $config->set('node_expire_past_date_allowed', $form_state->getValue('node_expire_past_date_allowed'));
     $config->save();
 
@@ -122,16 +146,10 @@ class NodeExpireAdminSettings extends ConfigFormBase {
 //    if (method_exists($this, '_submitForm')) {
 //      $this->_submitForm($form, $form_state);
 //    }
-    
+
      parent::submitForm($form, $form_state);
   }
 
 
-  public function validateForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
-    if ($form_state->getValue(['node_expire_date_entry_elements']) == 1 && $form_state->getValue(['node_expire_handle_content_expiry']) != 0 && !\Drupal::moduleHandler()->moduleExists('date_popup')) {
-      $form_state->setErrorByName('date_entry_elements', t('To use "Date popups" option Date module should be installed with Date Popup enabled.'));
-    }
-    // End of node_expire_admin_settings_validate().
-  }
 
 }
