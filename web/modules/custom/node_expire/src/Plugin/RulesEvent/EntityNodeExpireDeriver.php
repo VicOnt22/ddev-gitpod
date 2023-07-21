@@ -7,7 +7,6 @@ use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\StringTranslation\TranslationInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class EntityNodeExpireDeriver extends DeriverBase implements ContainerDeriverInterface {
@@ -24,16 +23,12 @@ class EntityNodeExpireDeriver extends DeriverBase implements ContainerDeriverInt
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
-   *   The string translation service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, TranslationInterface $string_translation) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
     $this->entityTypeManager = $entity_type_manager;
-    $this->stringTranslation = $string_translation;
   }
   public static function create(ContainerInterface $container, $base_plugin_id) {
-    // TODO: Implement create() method.
-    return new static($container->get('entity_type.manager'), $container->get('string_translation'));
+    return new static($container->get('entity_type.manager'));
   }
 
   /**
@@ -45,15 +40,16 @@ class EntityNodeExpireDeriver extends DeriverBase implements ContainerDeriverInt
       if (!$entity_type instanceof ContentEntityTypeInterface) {
         continue;
       }
-      // Only select node Content, avoiding blocks, links etc
-      if($entity_type->getLabel()  == 'Content') {
+      // Only select node, avoiding entities like block, comment, user, etc.
+      // TODO: remove if() below, to expire other entity types (will also need actions for them)
+      if(($entity_type->getLabel()  == 'Content') && ($entity_type_id == 'node')) {
         $this->derivatives[$entity_type_id] = [
-          'label' => $this->t('Node_Expire @entity_type', ['@entity_type' => $entity_type->getLabel()]),
-          'category' => 'Content',
-          'entity_type_id' => 'node',
+          'label' => $this->t('Node_Expire @entity_type', ['@entity_type' => $entity_type->getSingularLabel()]),
+          'category' => $entity_type->getLabel(),
+          'entity_type_id' => $entity_type_id,
           'context' => [
              $entity_type_id => [
-               'type' => "node",
+               'type' => "entity:$entity_type_id",
                'label' => $entity_type->getLabel(),
              ],
           ],

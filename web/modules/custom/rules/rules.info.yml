@@ -6,6 +6,7 @@ core_version_requirement: ^9.1 || ^10
 dependencies:
   - drupal:config
   - typed_data:typed_data
+  - jquery_ui:jquery_ui
 
 configure: entity.rules_reaction_rule.collection
 

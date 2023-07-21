@@ -32,4 +32,4 @@ rules.debug:
   dependencies:
     - core/drupal
     - core/once
-    - core/jquery.ui
+    - jquery_ui/core
