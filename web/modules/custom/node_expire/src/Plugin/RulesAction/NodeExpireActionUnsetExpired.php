@@ -31,7 +31,13 @@ class NodeExpireActionUnsetExpired extends RulesActionBase {
    */
   protected function doExecute($node) {
     // TODO: add checking if expire condition and updating DB?
-    //
+
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $value = $wrapper->value();
+    $value->expired = 0;
+    $value->lastnotify = 0;
+    $wrapper->set($value);
+    $wrapper->save();
 
   }
 }
