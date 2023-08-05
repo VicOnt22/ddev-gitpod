@@ -1,10 +1,10 @@
 _core:
   default_config_hash: VDJxTZtQR21qB4lvOq8zszJZLvLKrSPQpdn2E3T71Ww
 langcode: en
-uuid: 6748db7e-b9f8-4e1d-830f-9679b639ebe6
-name: 'd9 Node Expire'
-mail: nodexpire@selectfix.com
-slogan: 'admin:admin'
+uuid: fdadfece-a1bd-4dff-b133-e86a5db14885
+name: 'ddev gitpod node expire'
+mail: gitpod@selectfix.com
+slogan: ''
 page:
   403: ''
   404: ''

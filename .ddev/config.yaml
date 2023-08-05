@@ -195,4 +195,4 @@ web_environment: []
 # post-import-db:
 #   - exec: drush cr
 #   - exec: drush updb
-omit_containers: [dba]
+# omit_containers: [dba]

@@ -1,6 +1,18 @@
-_core:
-  default_config_hash: _G6E0XN0SZNr3uunLeNg8xknf4ZnJyCWeVJoA7JPDn8
 node_expire_handle_content_expiry: 2
 node_expire_date_entry_elements: 0
-node_expire_past_date_allowed: 0
-node_expire_ntypes: article
+node_expire_past_date_allowed: 1
+_core:
+  default_config_hash: mp14Zpuf_giA8MiHeDvmO-oVb5SfmBSL19YiJx3LjR0
+node_expire_ntypes:
+  article:
+    enabled: 1
+    default: '+1 week'
+    max: ''
+    required: 0
+handle_content_expiry: null
+date_entry_elements: null
+past_date_allowed: null
+actions: null
+form_build_id: form-FT2BpRloTaell_vRl-WRs_aS7rbdWmMArITnKkuh2AI
+form_token: Rftdvk9bssZ_mISOSQi32yufKOLgTpQ-bq-pWu7KEzA
+form_id: node_expire_admin_settings
