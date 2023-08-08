@@ -10,3 +10,15 @@ if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
    include $app_root . '/' . $site_path . '/settings.local.php';
 }
 
+$databases['default']['default'] = array (
+  'database' => 'db9_vic',
+  'username' => 'root',
+  'password' => '',
+  'prefix' => '',
+  'host' => 'localhost',
+  'port' => '3306',
+  'namespace' => 'Drupal\\mysql\\Driver\\Database\\mysql',
+  'driver' => 'mysql',
+  'autoload' => 'core/modules/mysql/src/Driver/Database/mysql/',
+);
+$settings['hash_salt'] = 'gXb52YskgkkaBipr-eYwmDdrZqdP8MsRCOE5zC_OvnA29SW4gyO9nhDiYf3zqNtDQcwumBk5eg';
