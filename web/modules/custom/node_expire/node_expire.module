@@ -9,6 +9,8 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\rules\Event\EntityEvent;
 use Drupal\node\Entity\Node;
 use Symfony\Component\HttpFoundation\Request;
+use Drupal\node\NodeInterface;
+use Drupal\Core\Entity\EntityForm;
 /**
  * @file
  * Set a timer into your content, allowing you to perform customized actions.
@@ -103,15 +105,58 @@ function node_expire_form_alter(&$form, \Drupal\Core\Form\FormStateInterface &$f
 // Could not extract the default value because it is either indeterminate, or
 // not scalar. You'll need to provide a default value in
 // config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
-if ((isset($form['type'])) &&
-    (isset($form['type']['#value'])) &&
-    ($form['type']['#value'] . '_node_form' == $form_id) &&
-    ($ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes')) &&
-    (isset($ntypes[$form['type']['#value']])) &&
-    ($ntype = $ntypes[$form['type']['#value']])) {
-  \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
-    _node_expire_form_alter_nodeform($ntype, $form, $form_state, $form_id);
+
+  // $ntypes is an array with all content types under node_expire
+  $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
+  $alltypes=array_keys($ntypes);
+
+  // $extract 'contenttype' from $form_id, that usually is like: 'node_contenttype_edit_form'. i.e node_page_edit_form
+  $extr1 = ltrim(strpbrk($form_id, '_'), '_');
+  $fulllength=strlen($extr1);
+  // to count for a case when contentype have _underscore in its machine name
+  $ending_position = strrpos($extr1, '_', -7);
+  $endlength = strlen(substr($extr1, $ending_position)); // '_edit_form'
+  $curr_nodetype = substr($extr1,0,$fulllength-$endlength);
+  $is_node_form = true;
+if ($curr_nodetype === 'type'){
+  $curr_nodetype = $form['type']['#default_value'];
+  $is_node_form = false;
+}
+
+  $is_node_and_is_under_node_expire = in_array($curr_nodetype, $alltypes, true) && $ntypes[$curr_nodetype]['enabled'] && $is_node_form;
+//  $curr_node_id = $form['path']['widget'][0]['source']['#value'];
+//  $curr_node_nid = $form_state->getformObject()->getEntity()->id();
+
+  /** @var \Drupal\Core\Entity\EntityForm $form_object */
+  $form_object = $form_state->getFormObject();
+  if ($form_object instanceof EntityForm) {
+    $entity = $form_object->getEntity();
+    // Do something with the entity.
   }
+
+  // do not show expire field when operation is node Delete or is a node preview
+  $op_delete = false;
+  $is_operation = $_POST['op'] ?? NULL;
+
+  If (!$is_operation == "Preview" && $extr1 !== 'preview_form_select') {
+    $op_check = $form_state->getFormObject()->getOperation();
+    $op_delete = FALSE;
+    if ($op_check === "delete") {
+      $op_delete = TRUE;
+    }
+  }
+
+  if ((isset($form['#form_id'])) &&
+    ($form['#form_id'] == $form_id) &&
+    ($is_node_and_is_under_node_expire) &&
+    (!$op_delete) &&
+    ($ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes')) &&
+    (isset($curr_nodetype)) &&
+    ($ntype = $curr_nodetype)) {
+    \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
+    _node_expire_form_alter_nodeform($ntype, $ntypes,$form, $form_state, $form_id, $entity);
+  }
+
 }
 
 /**
@@ -203,7 +248,6 @@ function node_expire_form_node_type_form_alter(&$form, FormStateInterface &$form
     // Add special validate/submit functions.
     \Drupal::moduleHandler()->loadInclude('node_expire', 'ntype.inc');
     $form['#validate'][] = '_node_expire_form_node_type_form_alter_validate';
-    //    $form['#submit'][]    = '_node_expire_form_node_type_form_alter_submit';
     foreach (array_keys($form['actions']) as $action) {
       if ($action != 'preview' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
         $form['actions'][$action]['#submit'][] = '_node_expire_form_node_type_form_alter_submit';

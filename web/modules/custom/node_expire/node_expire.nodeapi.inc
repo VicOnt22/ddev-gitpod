@@ -230,7 +230,7 @@ $stop=1;
 function _node_expire_write_record($node_expire, $nid) {
   $stop=1;
   $intnid= (int) $nid;
-  // Check, is it insert or update.
+  // Check, is it insert or update. // Vic - not needed as merge is doing checks automatically
 
 //  $cnt = \Drupal::database()->query(
 //    'SELECT count(nid)
@@ -283,23 +283,25 @@ function _node_expire_node_delete(&$ntype, \Drupal\node\NodeInterface $node) {
  *
  * Adds expiration options to the node entry forms
  */
-function _node_expire_form_alter_nodeform(&$ntype, &$form, &$form_state, $form_id) {
+function _node_expire_form_alter_nodeform(&$ntype, &$ntypes, &$form, &$form_state, $form_id, $node) {
   // Check if the Node expire feature is enabled for the node type.
-  $stop=1;
-  $node = isset($form['#node']) ? $form['#node'] : NULL;
-  $stop=1;
+//  $node = isset($form['#node']) ? $form['#node'] : NULL;
+
   $handle_content_expiry = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_handle_content_expiry');
+  $stop=1;
   if ($handle_content_expiry != 0) {
-    if (empty($ntype['enabled'])) {
+    if (empty($ntypes[$ntype]['enabled'])) {
       return;
     }
     // Replace not set to default string.
     if (!isset($node->expire)) {
-      $ntype = isset($ntypes[$node->getType()]) ? $ntypes[$node->getType()] : NULL;
-      $node->expire = _node_expire_date_db_to_str('', $ntype);
+      $ntype_expire = isset($ntypes[$ntype]) ? $ntypes[$ntype] : NULL; //vic to restore
+      $node->expire = _node_expire_date_db_to_str('', $ntype_expire);
     }
+
   }
   else {
+
     // Replace not set to empty string.
     if (!isset($node->expire)) {
       $node->expire = '';
@@ -307,12 +309,15 @@ function _node_expire_form_alter_nodeform(&$ntype, &$form, &$form_state, $form_i
     // Convert the timestamp into a human-readable date - legacy branch.
     if (is_numeric($node->expire)) {
       $node->expire = \Drupal::service('date.formatter')->format(intval($node->expire), 'custom', NODE_EXPIRE_FORMAT);
+      $stop=1;
     }
+
   }
 
   // This supports node to never expire.
-  if (empty($ntype['default']) && empty($node->expire)) {
-    $ntype['required'] = FALSE;
+
+  if(empty($ntypes[$ntype]['default']) && empty($node->expire)) {
+    $ntypes[$ntype]['required'] = FALSE; //vic to restore
   }
   if (\Drupal::currentUser()->hasPermission('edit node expire')) {
     if (_node_expire_get_date_entry_elements()) {
@@ -326,7 +331,7 @@ function _node_expire_form_alter_nodeform(&$ntype, &$form, &$form_state, $form_i
         ),
         '#type' => 'date_popup',
         '#date_format' => NODE_EXPIRE_FORMAT,
-        '#required' => $ntype['required'],
+        '#required' => $ntypes[$ntype]['required'],
         '#default_value' => intval($node->expire),
       );
     }
@@ -341,7 +346,7 @@ function _node_expire_form_alter_nodeform(&$ntype, &$form, &$form_state, $form_i
         ),
         '#type' => 'textfield',
         '#maxlength' => 25,
-        '#required' => $ntype['required'],
+        '#required' => $ntypes[$ntype]['required'], //vic to restore
         '#default_value' => $node->expire,
       );
     }
@@ -354,13 +359,14 @@ function _node_expire_form_alter_nodeform(&$ntype, &$form, &$form_state, $form_i
   }
 
   // If the form doesn't have the publishing options we'll create our own.
-  if (!$form['options']['#access']) {
+  if (empty($form['options']['#access'])) {
     $form['options1'] = array(
       '#type' => 'fieldset',
       '#title' => t('Publishing options'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
       '#weight' => 95,
+      '#group' => 'advanced',
     );
     $form['options1']['expire'] = &$expire_field;
   }
@@ -420,21 +426,21 @@ function _node_expire_date_str_to_db($date_in, $ntype) {
  * @param int $date_in
  *   Timestamp (int) date representation for DB:
  *   not set, timestamp int.
- * @param object $ntype
+ * @param array $ntype_expire
  *   Node expire configuration for particular node type.
  *
  * @return string
  *   String date representation for UI:
  *   date string or ''.
  */
-function _node_expire_date_db_to_str($date_in, $ntype) {
+function _node_expire_date_db_to_str($date_in, $ntype_expire) {
   $date_inner = $date_in;
   if ((empty($date_inner)) ||
     (!(_node_expire_is_valid_time_stamp($date_inner)))) {
-    if (isset($ntype) &&
-      !empty($ntype->default) &&
-      (strtotime($ntype->default))) {
-      $date_out = $ntype->default;
+    if (isset($ntype_expire) &&
+      !empty($ntype_expire['default']) &&
+      (strtotime($ntype_expire['default']))) {
+      $date_out = $ntype_expire['default'];
     }
     else {
       $date_out = '';

@@ -31,11 +31,15 @@ class NodeExpireActionUpdateLastnotify extends RulesActionBase {
   protected function doExecute($node) {
     // TODO: add checking if expire condition and updating DB?
 
-    $wrapper = entity_metadata_wrapper('node', $node);
-    $value = $wrapper->value();
-    $value->lastnotify = \Drupal::time()->getRequestTime();
-    $wrapper->set($value);
-    $wrapper->save();
+    $nodeid = $node->nid;
+    $nodeid2 = $node->id;
+    $stop=1;
+
+//    $wrapper = entity_metadata_wrapper('node', $node);
+//    $value = $wrapper->value();
+//    $value->lastnotify = \Drupal::time()->getRequestTime();
+//    $wrapper->set($value);
+//    $wrapper->save();
     // replace D7 entity_metadata_wrapper() using D8 entity-api info at
     //  https://www.drupal.org/docs/drupal-apis/entity-api/content-entity
 
