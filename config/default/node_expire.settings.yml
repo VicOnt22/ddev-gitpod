@@ -1,4 +1,4 @@
-node_expire_handle_content_expiry: 2
+node_expire_handle_content_expiry: 1
 node_expire_date_entry_elements: 0
 node_expire_past_date_allowed: 1
 _core:
@@ -6,7 +6,17 @@ _core:
 node_expire_ntypes:
   article:
     enabled: 1
-    default: '+1 week'
+    default: '+1 month'
+    max: ''
+    required: 0
+  page:
+    enabled: 1
+    default: ''
+    max: ''
+    required: 0
+  new_contenttype:
+    enabled: 0
+    default: ''
     max: ''
     required: 0
 handle_content_expiry: null
