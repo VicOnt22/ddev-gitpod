@@ -138,7 +138,7 @@ if ($curr_nodetype === 'type'){
   $op_delete = false;
   $is_operation = $_POST['op'] ?? NULL;
 
-  If (!$is_operation == "Preview" && $extr1 !== 'preview_form_select') {
+  If (!$is_operation == "Preview" && $extr1 !== 'preview_form_select' && $is_operation) {
     $op_check = $form_state->getFormObject()->getOperation();
     $op_delete = FALSE;
     if ($op_check === "delete") {
