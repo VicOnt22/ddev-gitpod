@@ -101,48 +101,60 @@ function node_expire_menu() {
  * Adds expiration options to the node entry forms
  */
 function node_expire_form_alter(&$form, \Drupal\Core\Form\FormStateInterface &$form_state, $form_id) {
-  // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
 
   // $ntypes is an array with all content types under node_expire
   $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
   $alltypes=array_keys($ntypes);
 
   // $extract 'contenttype' from $form_id, that usually is like: 'node_contenttype_edit_form'. i.e node_page_edit_form
-  $extr1 = ltrim(strpbrk($form_id, '_'), '_');
-  $fulllength=strlen($extr1);
-  // to count for a case when contentype have _underscore in its machine name
-  $ending_position = strrpos($extr1, '_', -7);
-  $endlength = strlen(substr($extr1, $ending_position)); // '_edit_form'
-  $curr_nodetype = substr($extr1,0,$fulllength-$endlength);
-  $is_node_form = true;
-if ($curr_nodetype === 'type'){
-  $curr_nodetype = $form['type']['#default_value'];
-  $is_node_form = false;
-}
+  $extr1 = ltrim(strpbrk($form_id, '_'), '_'); // commented below as we successfully use 'form_object'
 
-  $is_node_and_is_under_node_expire = in_array($curr_nodetype, $alltypes, true) && $ntypes[$curr_nodetype]['enabled'] && $is_node_form;
-//  $curr_node_id = $form['path']['widget'][0]['source']['#value'];
-//  $curr_node_nid = $form_state->getformObject()->getEntity()->id();
+//  $fulllength=strlen($extr1);
+//  // to count for a case when contentype have _underscore in its machine name
+//  $ending_position = strrpos($extr1, '_', -7);
+//  // a case when we just add new content
+//  if (!$ending_position){
+//    $ending_position = strrpos($extr1, '_', -4);
+//  }
+//  $endlength = strlen(substr($extr1, $ending_position)); // '_edit_form'
+//  $curr_nodetype = substr($extr1,0,$fulllength-$endlength);
+//  $is_node_form = true;
+//if ($curr_nodetype === 'type'){
+//  $curr_nodetype = $form['type']['#default_value'];
+//  $is_node_form = false;
+//}
 
   /** @var \Drupal\Core\Entity\EntityForm $form_object */
   $form_object = $form_state->getFormObject();
+  $is_node_form=false;
+  $curr_nodetype='';
   if ($form_object instanceof EntityForm) {
     $entity = $form_object->getEntity();
     // Do something with the entity.
+    if (isset($entity)) {
+      if ($entity->getEntityTypeId() === 'node') {
+        $is_node_form = TRUE;
+        $curr_nodetype = $entity->bundle();
+      };
+    }
   }
+
+  $is_node_and_is_under_node_expire = in_array($curr_nodetype, $alltypes, true) && $ntypes[$curr_nodetype]['enabled'] && $is_node_form;
 
   // do not show expire field when operation is node Delete or is a node preview
   $op_delete = false;
   $is_operation = $_POST['op'] ?? NULL;
-
-  If (!$is_operation == "Preview" && $extr1 !== 'preview_form_select' && $is_operation) {
-    $op_check = $form_state->getFormObject()->getOperation();
-    $op_delete = FALSE;
-    if ($op_check === "delete") {
-      $op_delete = TRUE;
+  if (!$is_operation == "Preview" && $is_operation) {
+    $ini_op_check = $form_state->getFormObject()->getOperation();
+  }
+  if (isset($ini_op_check)) {
+    $op_delete = TRUE;
+    if (!$is_operation == "Preview") {
+      $op_check = $form_state->getFormObject()->getOperation();
+      $op_delete = FALSE;
+      if (($op_check === "delete") && ($ini_op_check === 'delete')) {
+        $op_delete = TRUE;
+      }
     }
   }
 
@@ -167,10 +179,7 @@ if ($curr_nodetype === 'type'){
 //function node_expire_form_node_type_form_alter(&$form, FormStateInterface &$form_state) {
 function node_expire_form_node_type_form_alter(&$form, FormStateInterface &$form_state, $form_id) {
   if (\Drupal::currentUser()->hasPermission('administer node expire')) {
-    // @FIXME
-    // Could not extract the default value because it is either indeterminate, or
-    // not scalar. You'll need to provide a default value in
-    // config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
+
     $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')
       ->get('node_expire_ntypes');
 
@@ -262,8 +271,6 @@ function node_expire_form_node_type_form_alter(&$form, FormStateInterface &$form
 //function node_expire_node_load($nodes=[], $types=[]) {
 function node_expire_node_load($nodes) {
   \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
-  // _node_expire_node_load($ntypes, $nodes, $types);
-//  _node_expire_node_load($nodes, $types);
   _node_expire_node_load($nodes);
 }
 
@@ -272,12 +279,8 @@ function node_expire_node_load($nodes) {
  */
 function node_expire_node_prepare_form($node) {
   // Only deal with node types that have the Node expire feature enabled.
-  // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
-$ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
 
+$ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
   if (!isset($ntypes[$node->getType()])) {
     return;
   }
@@ -293,12 +296,8 @@ $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expi
  */
 function node_expire_node_validate(\Drupal\node\NodeInterface $node) {
   // Only deal with node types that have the Node expire feature enabled.
-  // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
+
 $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
-$stop=1;
   if (!isset($ntypes[$node->getType()])) {
     return;
   }
@@ -314,12 +313,8 @@ $stop=1;
  */
 function node_expire_node_update(\Drupal\node\NodeInterface $node) {
   // Only deal with node types that have the Node expire feature enabled.
-  // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
+
 $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
-  $stop=1;
   if (!isset($ntypes[$node->getType()])) {
     return;
   }
@@ -335,12 +330,8 @@ $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expi
  */
 function node_expire_node_insert(\Drupal\node\NodeInterface $node) {
   // Only deal with node types that have the Node expire feature enabled.
-  // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
+
 $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
-  $stop=1;
   if (!isset($ntypes[$node->getType()])) {
     return;
   }
@@ -356,12 +347,8 @@ $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expi
  */
 function node_expire_node_delete(\Drupal\node\NodeInterface $node) {
   // Only deal with node types that have the Node expire feature enabled.
-  // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
+
 $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
-$stop=1;
   if (!isset($ntypes[$node->getType()])) {
     return;
   }
