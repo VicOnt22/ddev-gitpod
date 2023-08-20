@@ -6,6 +6,7 @@
  */
 use Drupal\node\Entity;
 use Drupal\node\NodeInterface;
+use Drupal\Core\Datetime\DrupalDateTime;
 
 /**
  * Implements hook_node_load().
@@ -228,7 +229,7 @@ $stop=1;
  * Writes node_expire record.
  */
 function _node_expire_write_record($node_expire, $nid) {
-  $stop=1;
+
   $intnid= (int) $nid;
   // Check, is it insert or update. // Vic - not needed as merge is doing checks automatically
 
@@ -266,6 +267,8 @@ function _node_expire_write_record($node_expire, $nid) {
         'expired' => $node_expire->expired,
         'lastnotify' => $node_expire->lastnotify,
       ])->execute();
+
+      $stop=1;
 }
 
 /**
@@ -283,9 +286,8 @@ function _node_expire_node_delete(&$ntype, \Drupal\node\NodeInterface $node) {
  *
  * Adds expiration options to the node entry forms
  */
-function _node_expire_form_alter_nodeform(&$ntype, &$ntypes, &$form, &$form_state, $form_id, $node) {
+function _node_expire_form_alter_nodeform(&$ntype, &$ntypes, &$form, &$form_state, $form_id, \Drupal\node\NodeInterface $node) {
   // Check if the Node expire feature is enabled for the node type.
-//  $node = isset($form['#node']) ? $form['#node'] : NULL;
 
   $handle_content_expiry = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_handle_content_expiry');
   $stop=1;
@@ -297,6 +299,7 @@ function _node_expire_form_alter_nodeform(&$ntype, &$ntypes, &$form, &$form_stat
     if (!isset($node->expire)) {
       $ntype_expire = isset($ntypes[$ntype]) ? $ntypes[$ntype] : NULL; //vic to restore
       $node->expire = _node_expire_date_db_to_str('', $ntype_expire);
+      $stop=1;
     }
 
   }
@@ -324,15 +327,18 @@ function _node_expire_form_alter_nodeform(&$ntype, &$ntypes, &$form, &$form_stat
       // Date popups.
       $expire_field = array(
         '#title' => t('Expiration date'),
-        '#description' => t('Time date to consider the node expired. Format: %time (YYYY-MM-DD).',
+        '#description' => t('Time date to consider the node expired. Format: %time (MM/DD/YYYY).',
           array(
-            '%time' => \Drupal::service('date.formatter')->format(\Drupal::time()->getRequestTime(), 'custom', NODE_EXPIRE_FORMAT),
+            '%time' => \Drupal::service('date.formatter')->format(\Drupal::time()->getRequestTime(), 'custom', 'm/d/Y'),
           )
         ),
-        '#type' => 'date_popup',
+//        '#type' => 'date_popup',
+        '#type' => 'datetime',
+        '#date_time_element' => 'none',
         '#date_format' => NODE_EXPIRE_FORMAT,
         '#required' => $ntypes[$ntype]['required'],
-        '#default_value' => intval($node->expire),
+//        '#default_value' => intval($node->expire),
+        '#default_value' => DrupalDateTime::createFromTimestamp(intval($node->expire)),
       );
     }
     else {
@@ -354,7 +360,7 @@ function _node_expire_form_alter_nodeform(&$ntype, &$ntypes, &$form, &$form_stat
   else {
     $expire_field = array(
       '#type' => 'value',
-      '#value' => $node->expire,
+      '#value' => intval($node->expire),
     );
   }
 
@@ -362,7 +368,7 @@ function _node_expire_form_alter_nodeform(&$ntype, &$ntypes, &$form, &$form_stat
   if (empty($form['options']['#access'])) {
     $form['options1'] = array(
       '#type' => 'fieldset',
-      '#title' => t('Publishing options'),
+      '#title' => t('Node Expire publishing option'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
       '#weight' => 95,
@@ -375,11 +381,9 @@ function _node_expire_form_alter_nodeform(&$ntype, &$ntypes, &$form, &$form_stat
   }
 
   if (isset($node->expired)) {
-    $form['node_expire'] = array(
-      '#type' => 'value',
-      '#value' => TRUE,
-    );
+    $form['node_expire'] = array('#type' => 'value', '#value' => TRUE,); //just as flag? ...that 'node_expire' is in this form?
   }
+  $stop=1;
 }
 
 /**
@@ -435,7 +439,7 @@ function _node_expire_date_str_to_db($date_in, $ntype) {
  */
 function _node_expire_date_db_to_str($date_in, $ntype_expire) {
   $date_inner = $date_in;
-  if ((empty($date_inner)) ||
+  if ((empty($date_inner)) &&
     (!(_node_expire_is_valid_time_stamp($date_inner)))) {
     if (isset($ntype_expire) &&
       !empty($ntype_expire['default']) &&
@@ -450,7 +454,11 @@ function _node_expire_date_db_to_str($date_in, $ntype_expire) {
     $date_out = '';
   }
   else {
-    $date_out = date(NODE_EXPIRE_FORMAT, $date_inner);
+    $dt = new DateTime();
+    $dt->setTimestamp($date_inner);
+//    $date_out = date(NODE_EXPIRE_FORMAT, $date_inner);
+
+    $date_out = $dt->format('Y-m-d');
   }
   return $date_out;
 }
@@ -459,7 +467,10 @@ function _node_expire_date_db_to_str($date_in, $ntype_expire) {
  * Checks timestamp to be valid.
  */
 function _node_expire_is_valid_time_stamp($timestamp) {
-  return ((string) (int) $timestamp === $timestamp)
+
+  $return_timestamp = ((string) (int) $timestamp === $timestamp)
     && ($timestamp <= PHP_INT_MAX)
     && ($timestamp >= ~PHP_INT_MAX);
+
+  return $return_timestamp;
 }

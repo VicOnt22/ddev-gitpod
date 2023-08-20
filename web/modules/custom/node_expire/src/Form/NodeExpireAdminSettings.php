@@ -59,7 +59,10 @@ class NodeExpireAdminSettings extends ConfigFormBase {
         1 => t('Trigger "Content Expired" event every cron run when the node is expired'),
         2 => t('Trigger "Content Expired" event only once when the node is expired'),
       ],
-      '#description' => t('In non-legacy mode node expiry is set for each node type separately and disabled by default.') . ' ' . t('Enable it at Structure -> Content types -> {Your content type} -> Edit -> Publishing options.') . '<br />' . t('"Trigger "Content Expired" event only once " option allows to ignore nodes, which already have been processed.') . '<br />' . t('Legacy mode means: not possible to allow expiry separately for each particular node type, trigger "Content Expired" event every cron run, legacy data saving'),
+      '#description' => t('In non-legacy mode node expiry is set for each node type separately and disabled by default.') . ' '
+        . t('Enable it at Structure -> Content types -> {Your content type} -> Edit -> Publishing options.') . '<br />'
+        . t('"Trigger "Content Expired" event only once " option allows to ignore nodes, which already have been processed.') . '<br />'
+        . t('Legacy mode means: not possible to allow expiry separately for each particular node type, trigger "Content Expired" event every cron run, legacy data saving'),
     ];
 
     // Visibility.
@@ -93,7 +96,7 @@ class NodeExpireAdminSettings extends ConfigFormBase {
         0 => t('Text fields'),
         1 => t('Date popups'),
       ],
-      '#description' => t('"Date popups" option requires Date module to be installed') . ' ' . t('with Date Popup enabled. This option is not available in legacy mode.'),
+      '#description' => t('"Date popups" option requires Core Datetime module to be enabled.') . ' ' . t(' This option is not available in legacy mode.'),
       '#states' => $states,
     ];
 
@@ -123,7 +126,7 @@ class NodeExpireAdminSettings extends ConfigFormBase {
    */
   public function validateForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
     if ($form_state->getValue(['node_expire_date_entry_elements']) == 1 && $form_state->getValue(['node_expire_handle_content_expiry']) != 0 && !\Drupal::moduleHandler()->moduleExists('datetime')) {
-      $form_state->setErrorByName('date_entry_elements', t('To use "Date popups" option Datetime module should be installed from Core.'));
+      $form_state->setErrorByName('date_entry_elements', t('To use "Date popups" option the Core Datetime module should be enabled.'));
     }
     // End of node_expire_admin_settings_validate().
   }

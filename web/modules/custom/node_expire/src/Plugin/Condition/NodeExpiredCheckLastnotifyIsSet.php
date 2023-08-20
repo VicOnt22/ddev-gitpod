@@ -17,7 +17,8 @@ class NodeExpiredCheckLastnotifyIsSet extends RulesConditionBase {
    * Checks if the node has the "Expired" flag on
    * and lastnotify is set
    *
-   * @param \Drupal\node\NodeInterface $node
+   * //   * @param \Drupal\node\NodeInterface $node
+   * @param $node
    *   The node to be checked.
    *
    * @return bool
@@ -25,7 +26,20 @@ class NodeExpiredCheckLastnotifyIsSet extends RulesConditionBase {
    *
    */
   public function doEvaluate(NodeInterface $node): bool {
-    return (!empty($node->expire) && $node->expire <= time() && $node->expired == 1 && $node->lastnotify != 0);
+
+    $tt = time();
+    if (isset($node->expire) || isset($node->expired) || isset($node->lastnotify)) {
+      $ne = $node->expire;
+      $ned = $node->expired;
+      $nln = $node->lastnotify;
+      $nev = $node->expire->value;
+      $nedv = $node->expired->value;
+      $nlnv = $node->lastnotify->value;
+    }
+    $stop = 1;
+    return (!empty($node->expire) && $node->expire->value <= time() && $node->expired->value == 1 && $node->lastnotify->value != 0);
+
+
   }
 
 }

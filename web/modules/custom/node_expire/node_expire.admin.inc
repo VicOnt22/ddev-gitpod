@@ -62,8 +62,8 @@ function node_expire_admin_settings() {
       0 => t('Text fields'),
       1 => t('Date popups'),
     ),
-    '#description'   => t('"Date popups" option requires Date module to be installed') . ' ' .
-    t('with Date Popup enabled. This option is not available in legacy mode.'),
+    '#description'   => t('"Date popups" option requires Core Datetime module to be enabled.') . ' ' .
+    t('This option is not available in legacy mode.'),
     '#states' => $states,
   );
 
@@ -95,10 +95,9 @@ function node_expire_admin_settings() {
 function node_expire_admin_settings_validate($form, &$form_state) {
   if ($form_state['values']['node_expire_date_entry_elements'] == 1 &&
     $form_state['values']['node_expire_handle_content_expiry'] != 0 &&
-    !\Drupal::moduleHandler()->moduleExists('date_popup')) {
+    !\Drupal::moduleHandler()->moduleExists('datetime')) {
     $form_state->setErrorByName('date_entry_elements',
-      t('To use "Date popups" option Date module should be installed with Date Popup enabled.')
-      // . ' ' . t('This option is not available in legacy mode.')
+      t('To use "Date popups" option the Core Datetime module should be enabled.')
     );
   }
   // End of node_expire_admin_settings_validate().

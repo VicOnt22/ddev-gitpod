@@ -24,7 +24,14 @@ class NodeExpiredCheck extends RulesConditionBase {
    *
    */
   public function doEvaluate(NodeInterface $node): bool {
-    return (!empty($node->expire) && ($node->expire <= \Drupal::time()->getRequestTime()) && $node->expired == 1);
+    if(isset($node->expire) && isset($node->expired)) {
+      $ne=$node->expire;
+      $ned=$node->expired;
+      $nev = $node->expire->value;
+      $nedv = $node->expired->value;
+    }
+    $stop=1;
+    return (!empty($node->expire) && ($node->expire->value <= \Drupal::time()->getRequestTime()) && $node->expired->value == 1);
   }
 
 }

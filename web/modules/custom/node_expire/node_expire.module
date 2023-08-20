@@ -11,6 +11,7 @@ use Drupal\node\Entity\Node;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\node\NodeInterface;
 use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Url;
 /**
  * @file
  * Set a timer into your content, allowing you to perform customized actions.
@@ -21,7 +22,7 @@ const NODE_EXPIRE_FORMAT_JS = 'yy-mm-dd';
 // define('NODE_EXPIRE_COMMON_DEFAULT_DATE', '2048-01-01');
 // Will be placed to the "expire" field corresponding empty
 // ("never expire") strings. 2461500000 is 2048-01-01.
-const NODE_EXPIRE_NO_EXPIRE = 2461500000;
+const NODE_EXPIRE_NO_EXPIRE = 2145848400;
 
 /**
  * Implements hook_cron().
@@ -124,6 +125,12 @@ function node_expire_form_alter(&$form, \Drupal\Core\Form\FormStateInterface &$f
 //  $is_node_form = false;
 //}
 
+  $op_path = \Drupal::service('path.current')->getPath();
+  $check_op_add=strpos($op_path, '/add');
+  $check_op_dit=strpos($op_path, '/edit');
+  // do not show expire field when operation is node Delete or is a node preview
+  $check_op_delete=strpos($op_path, '/delete');
+
   /** @var \Drupal\Core\Entity\EntityForm $form_object */
   $form_object = $form_state->getFormObject();
   $is_node_form=false;
@@ -141,27 +148,29 @@ function node_expire_form_alter(&$form, \Drupal\Core\Form\FormStateInterface &$f
 
   $is_node_and_is_under_node_expire = in_array($curr_nodetype, $alltypes, true) && $ntypes[$curr_nodetype]['enabled'] && $is_node_form;
 
-  // do not show expire field when operation is node Delete or is a node preview
-  $op_delete = false;
-  $is_operation = $_POST['op'] ?? NULL;
-  if (!$is_operation == "Preview" && $is_operation) {
-    $ini_op_check = $form_state->getFormObject()->getOperation();
-  }
-  if (isset($ini_op_check)) {
-    $op_delete = TRUE;
-    if (!$is_operation == "Preview") {
-      $op_check = $form_state->getFormObject()->getOperation();
-      $op_delete = FALSE;
-      if (($op_check === "delete") && ($ini_op_check === 'delete')) {
-        $op_delete = TRUE;
-      }
-    }
-  }
+// //do not show expire field when operation is node Delete or is a node preview
+//  $op_delete = false; //usually show field as usually operation is edit.
+//  $is_operation = $_POST['op'] ?? NULL;
+//  if (!$is_operation == "Preview" && $is_operation) {
+
+//    $ini_op_check = $form_state->getFormObject()->getOperation();
+
+//  }
+//  if (isset($ini_op_check)) {
+//    $op_delete = TRUE;
+//    if (!$is_operation == "Preview") {
+//      $op_check = $form_state->getFormObject()->getOperation();
+//      $op_delete = FALSE;
+//      if (($op_check === "delete") && ($ini_op_check === 'delete')) {
+//        $op_delete = TRUE;
+//      }
+//    }
+//  }
 
   if ((isset($form['#form_id'])) &&
     ($form['#form_id'] == $form_id) &&
     ($is_node_and_is_under_node_expire) &&
-    (!$op_delete) &&
+    (!$check_op_delete) &&
     ($ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes')) &&
     (isset($curr_nodetype)) &&
     ($ntype = $curr_nodetype)) {
@@ -425,8 +434,9 @@ function node_expire_set_expired($nid) {
  *   1 - use date popups
  */
 function _node_expire_get_date_entry_elements() {
-  // No date_popup module.
-  if (!\Drupal::moduleHandler()->moduleExists('datetime')) {
+  // core datetime not enabled.
+  $module_enabled = \Drupal::moduleHandler()->moduleExists('datetime');
+  if (!$module_enabled) {
     return 0;
   }
 

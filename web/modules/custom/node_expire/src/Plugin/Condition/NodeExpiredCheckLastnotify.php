@@ -25,7 +25,16 @@ class NodeExpiredCheckLastnotify extends RulesConditionBase {
    *
    */
   public function doEvaluate(NodeInterface $node): bool {
-    return (!empty($node->expire) && $node->expire <= \Drupal::time()->getRequestTime() && $node->expired == 1 && $node->lastnotify <= (\Drupal::time()->getRequestTime() - (14 * 24 * 60 * 60)));
+    if(isset($node->expire) && isset($node->expired) && isset($node->lastnotify)) {
+      $ne = $node->expire;
+      $ned = $node->expired;
+      $nln = $node->lastnotify;
+      $nev = $node->expire->value;
+      $nedv = $node->expired->value;
+      $nlnv = $node->lastnotify->value;
+    }
+    $stop=1;
+    return (!empty($node->expire) && $node->expire->value <= \Drupal::time()->getRequestTime() && $node->expired->value == 1 && $node->lastnotify->value <= (\Drupal::time()->getRequestTime() - (14 * 24 * 60 * 60)));
   }
 
 }

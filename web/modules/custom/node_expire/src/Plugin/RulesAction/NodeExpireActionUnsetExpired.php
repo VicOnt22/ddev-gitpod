@@ -8,7 +8,7 @@ use Drupal\rules\Core\RulesActionBase;
  * Provides a 'Show message on your site' action.    // Unset node expired flag action
  *
  * @RulesAction(
- *   id = "node_expire_unset_expired",
+ *   id = "node_expire_action_unset_expired",
  *   label = @Translation("NodeExpire Unset expired node"),
  *   category = @Translation("Content"),
  *   context_definitions = {
@@ -34,6 +34,10 @@ class NodeExpireActionUnsetExpired extends RulesActionBase {
 
     $nodeid = $node->nid;
     $nodeid2 = $node->id;
+    $stop=1;
+    $node->lastnotify = 0;
+    $node->expired = 0;
+    $node->save();
     $stop=1;
 //    $wrapper = entity_metadata_wrapper('node', $node);
 //    $value = $wrapper->value();
