@@ -18,6 +18,7 @@ module:
   devel: 0
   dynamic_page_cache: 0
   editor: 0
+  entity: 0
   field: 0
   field_ui: 0
   file: 0
@@ -25,6 +26,7 @@ module:
   help: 0
   history: 0
   image: 0
+  jquery_ui: 0
   link: 0
   menu_link_content: 0
   menu_ui: 0
@@ -37,10 +39,12 @@ module:
   path_alias: 0
   rules: 0
   search: 0
+  settings_tray: 0
   shortcut: 0
   system: 0
   taxonomy: 0
   text: 0
+  token: 0
   toolbar: 0
   tour: 0
   typed_data: 0
@@ -52,5 +56,4 @@ module:
 theme:
   olivero: 0
   claro: 0
-  seven: 0
 profile: standard
