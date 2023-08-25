@@ -293,7 +293,8 @@ $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expi
   if (!isset($ntypes[$node->getType()])) {
     return;
   }
-  if (!$ntype = $ntypes[$node->getType()]) {
+  $ntype = $ntypes[$node->getType()];
+  if (!$ntype) {
     return;
   }
   \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
@@ -310,9 +311,12 @@ $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expi
   if (!isset($ntypes[$node->getType()])) {
     return;
   }
-  if (!$ntype = $ntypes[$node->getType()]) {
+
+  $ntype = $ntypes[$node->getType()];
+  if (!$ntype) {
     return;
   }
+
   \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
   _node_expire_node_validate($ntype, $node);
 }
@@ -327,7 +331,8 @@ $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expi
   if (!isset($ntypes[$node->getType()])) {
     return;
   }
-  if (!$ntype = $ntypes[$node->getType()]) {
+  $ntype = $ntypes[$node->getType()];
+  if (!$ntype) {
     return;
   }
   \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
@@ -361,7 +366,8 @@ $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expi
   if (!isset($ntypes[$node->getType()])) {
     return;
   }
-  if (!$ntype = $ntypes[$node->getType()]) {
+  $ntype = $ntypes[$node->getType()];
+  if (!$ntype) {
     return;
   }
   \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
