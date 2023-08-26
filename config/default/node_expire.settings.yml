@@ -4,25 +4,18 @@ node_expire_past_date_allowed: 1
 _core:
   default_config_hash: mp14Zpuf_giA8MiHeDvmO-oVb5SfmBSL19YiJx3LjR0
 node_expire_ntypes:
-  article:
+  newcontent_type:
     enabled: 1
     default: '+1 month'
     max: ''
     required: 0
+  article:
+    enabled: 1
+    default: '+2 month'
+    max: ''
+    required: 1
   page:
     enabled: 1
     default: ''
     max: ''
     required: 0
-  new_contenttype:
-    enabled: 0
-    default: ''
-    max: ''
-    required: 0
-handle_content_expiry: null
-date_entry_elements: null
-past_date_allowed: null
-actions: null
-form_build_id: form-FT2BpRloTaell_vRl-WRs_aS7rbdWmMArITnKkuh2AI
-form_token: Rftdvk9bssZ_mISOSQi32yufKOLgTpQ-bq-pWu7KEzA
-form_id: node_expire_admin_settings

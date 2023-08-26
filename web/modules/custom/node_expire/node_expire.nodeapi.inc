@@ -60,6 +60,7 @@ function _node_expire_node_load($nodes) {
       $nodes[$record->nid]->lastnotify = $record->lastnotify;
     }
   }
+  $stop=1;
 }
 
 /**
@@ -76,11 +77,14 @@ $stop=1;
   }elseif (!isset($node->expire)){
     $node->expire = '';
   }
+
    // Make sure the 'expire' property is set on the node, which wouldn't happen
    // if one of the above conditions failed. it seems that is last elseif() already doing, so we commented below two lines
-//   if (!property_exists($node, 'expire')) {
-//     $node->expire = NULL;
-//   }
+
+   //   if (!property_exists($node, 'expire')) {
+   //     $node->expire = NULL;
+   //   }
+
 }
 
 /**
@@ -98,18 +102,18 @@ function _node_expire_node_validate(&$ntype, \Drupal\node\NodeInterface $node) {
   // The only restriction we have is that the node can't expire in the past.
   if ($node->expire == '') {
     if (!empty($ntype['required']) && $ntype['default']) {
-      form_set_error('expire_date', t('You must choose an expiration date.'));
+      \Drupal::messenger()->addError(t('You must choose an expiration date.'));
     }
   }
   elseif (!$expire = strtotime($node->expire) or $expire <= 0) {
-//    form_set_error('expire_date', t('You have to specify a valid expiration date.'));
-    $form_state->setErrorByName('expire_date', t('You have to specify a valid expiration date.'));
+//    $form_state->setErrorByName('expire_date', t('You have to specify a valid expiration date.'));
+    \Drupal::messenger()->addError(t('You have to specify a valid expiration date.'));
   }
   elseif (\Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_past_date_allowed') == 0 && $expire <= \Drupal::time()->getRequestTime()) {
-    form_set_error('expire_date', t("You can't expire a node in the past!"));
+    \Drupal::messenger()->addError(t("You can't expire a node in the past!"));
   }
   elseif (!empty($ntype['max']) and $expire > strtotime(intval($ntype['max']), $node->getCreatedTime())) {
-    form_set_error('expire_date', t('It must expire before %date.',
+    \Drupal::messenger()->addError(t('It must expire before %date.',
     array(
       '%date' => \Drupal::service('date.formatter')->format(intval(strtotime($ntype['max']), $node->getCreatedTime()), 'custom', NODE_EXPIRE_FORMAT),
     )));
@@ -165,7 +169,7 @@ $stop=1;
       _node_expire_node_prepare($ntype, $node);
     }
 
-    // Expire.
+    // Expire is set
     $date_expire = _node_expire_date_str_to_db($node->expire, $ntype);
     $node_expire->expire = $date_expire;
 
@@ -195,9 +199,8 @@ $stop=1;
       $node_expire->expired = $node->original->expired;
       // Also get other Node expire values.
       // Expire.
-      $date_expire
-        = _node_expire_date_str_to_db($node->original->expire, $ntype);
-      $node_expire->expire = $date_expire;
+      $date_expire = _node_expire_date_str_to_db($node->original->expire, $ntype);
+      $node_expire->expire = $date_expire;  //HERE shall eb New VALUE when changed in node edit Form
       // Lastnotify.
       if (isset($node->original->lastnotify)) {
         $node_expire->lastnotify = $node->original->lastnotify;
@@ -219,8 +222,7 @@ $stop=1;
       $node_expire->expired = 0;
     }
 
-    // Write the record.
-//    _node_expire_write_record($node_expire, $node->id());
+    // Write the record. $node_expire shall have new value
     _node_expire_write_record($node_expire, $node->id());
   }
 }

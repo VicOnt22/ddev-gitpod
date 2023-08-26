@@ -1,4 +1,4 @@
-uuid: 28284be6-d01f-4e8e-bd16-e60ae9e159a1
+uuid: 7fe0a430-8ac8-4476-b781-0626fe2986c6
 langcode: en
 status: true
 dependencies: {  }
@@ -7,7 +7,7 @@ _core:
 id: feedback
 label: 'Website feedback'
 recipients:
-  - gitpod@selectfix.com
+  - xamp@selectfix.com
 reply: ''
 weight: 0
 message: 'Your message has been sent.'

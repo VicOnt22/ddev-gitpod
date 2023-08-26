@@ -1,10 +1,9 @@
-uuid: c4368ac8-0ada-4125-9887-960a509c3491
+uuid: 2013cd9a-1a54-44ca-bcbf-f56d41ad99b3
 langcode: en
 status: true
 dependencies:
   config:
     - field.field.node.article.body
-    - field.field.node.article.comment
     - field.field.node.article.field_image
     - field.field.node.article.field_tags
     - image.style.thumbnail
@@ -32,7 +31,7 @@ content:
     third_party_settings: {  }
   created:
     type: datetime_timestamp
-    weight: 5
+    weight: 10
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -56,27 +55,27 @@ content:
     third_party_settings: {  }
   path:
     type: path
-    weight: 8
+    weight: 30
     region: content
     settings: {  }
     third_party_settings: {  }
   promote:
     type: boolean_checkbox
-    weight: 6
+    weight: 15
     region: content
     settings:
       display_label: true
     third_party_settings: {  }
   status:
     type: boolean_checkbox
-    weight: 9
+    weight: 120
     region: content
     settings:
       display_label: true
     third_party_settings: {  }
   sticky:
     type: boolean_checkbox
-    weight: 7
+    weight: 16
     region: content
     settings:
       display_label: true
@@ -91,7 +90,7 @@ content:
     third_party_settings: {  }
   uid:
     type: entity_reference_autocomplete
-    weight: 4
+    weight: 5
     region: content
     settings:
       match_operator: CONTAINS
@@ -99,5 +98,4 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
-hidden:
-  comment: true
+hidden: {  }

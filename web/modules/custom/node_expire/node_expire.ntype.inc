@@ -42,10 +42,7 @@ function _node_expire_form_node_type_form_alter_validate(&$form, &$form_state) {
  */
 //function _node_expire_form_node_type_form_alter_submit(&$form, FormStateInterface &$form_state, $form_id) {
 function _node_expire_form_node_type_form_alter_submit(&$form, FormStateInterface &$form_state) {
-  // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
+
 $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
 $stop=1;
   $handle_content_expiry = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_handle_content_expiry');
