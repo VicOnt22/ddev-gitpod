@@ -286,7 +286,7 @@ function node_expire_node_load($nodes) {
 /**
  * Implements hook_node_prepare().
  */
-function node_expire_node_prepare_form($node) {
+function node_expire_node_prepare(EntityInterface $node) {
   // Only deal with node types that have the Node expire feature enabled.
 
 $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
@@ -298,13 +298,13 @@ $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expi
     return;
   }
   \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
-  _node_expire_node_prepare($ntype, $node);
+  _node_expire_node_prepare($node, $ntype,);
 }
 
 /**
  * Implements hook_node_validate().
  */
-function node_expire_node_validate(\Drupal\node\NodeInterface $node) {
+function node_expire_node_validate(\Drupal\Core\Entity\EntityInterface $node, $form, &$form_state) {
   // Only deal with node types that have the Node expire feature enabled.
 
 $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
@@ -318,13 +318,13 @@ $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expi
   }
 
   \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
-  _node_expire_node_validate($ntype, $node);
+  _node_expire_node_validate($ntype, $node, $form, $form_state);
 }
 
 /**
  * Implements hook_nodeapi_update().
  */
-function node_expire_node_update(\Drupal\node\NodeInterface $node) {
+function node_expire_node_update(\Drupal\Core\Entity\EntityInterface $node) {
   // Only deal with node types that have the Node expire feature enabled.
 
 $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
@@ -342,7 +342,7 @@ $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expi
 /**
  * Implements hook_nodeapi_insert().
  */
-function node_expire_node_insert(\Drupal\node\NodeInterface $node) {
+function node_expire_node_insert(\Drupal\Core\Entity\EntityInterface $node) {
   // Only deal with node types that have the Node expire feature enabled.
 
 $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');

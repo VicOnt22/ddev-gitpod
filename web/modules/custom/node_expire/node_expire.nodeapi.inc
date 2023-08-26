@@ -11,16 +11,12 @@ use Drupal\Core\Datetime\DrupalDateTime;
 /**
  * Implements hook_node_load().
  */
-//function _node_expire_node_load($nodes, $types) {
+//function _node_expire_node_load($nodes, $types) { //it seem D9, 10 needs only $entities
 function _node_expire_node_load($nodes) {
   // Only deal with node types that have the Node expire feature enabled.
-  // @FIXME
-  // Could not extract the default value because it is either indeterminate, or
-  // not scalar. You'll need to provide a default value in
-  // config/install/node_expire.settings.yml and config/schema/node_expire.schema.yml.
   $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_ntypes');
   $node_expire_enabled = [];
-
+  
   // Check if node_expire are enabled for each node.
   // If node_expires are not enabled, do nothing.
 
@@ -66,7 +62,7 @@ function _node_expire_node_load($nodes) {
 /**
  * Implements hook_node_prepare().
  */
-function _node_expire_node_prepare(&$ntype, \Drupal\node\NodeInterface $node) {
+function _node_expire_node_prepare(\Drupal\Core\Entity\EntityInterface $node, &$ntype) {
   // To prevent default value 1969-12-31 check also $ntypes['default'].
 $stop=1;
   if (!isset($node->expire) && $ntype['default']) {
@@ -90,7 +86,7 @@ $stop=1;
 /**
  * Implements hook_node_validate().
  */
-function _node_expire_node_validate(&$ntype, \Drupal\node\NodeInterface $node) {
+function _node_expire_node_validate(&$ntype, \Drupal\node\NodeInterface $node, $form, &$form_state) {
   $handle_content_expiry = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_handle_content_expiry');
   $stop=1;
   if ($handle_content_expiry != 0) {
@@ -106,8 +102,8 @@ function _node_expire_node_validate(&$ntype, \Drupal\node\NodeInterface $node) {
     }
   }
   elseif (!$expire = strtotime($node->expire) or $expire <= 0) {
-//    $form_state->setErrorByName('expire_date', t('You have to specify a valid expiration date.'));
-    \Drupal::messenger()->addError(t('You have to specify a valid expiration date.'));
+    $form_state->setErrorByName('expire_date', t('You have to specify a valid expiration date.'));
+//    \Drupal::messenger()->addError(t('You have to specify a valid expiration date.'));
   }
   elseif (\Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_past_date_allowed') == 0 && $expire <= \Drupal::time()->getRequestTime()) {
     \Drupal::messenger()->addError(t("You can't expire a node in the past!"));
@@ -166,7 +162,7 @@ $stop=1;
     // For compatibility with Node Clone module.
     // Set default $node->expire value if it is not set.
     if (!isset($node->expire)) {
-      _node_expire_node_prepare($ntype, $node);
+      _node_expire_node_prepare($node, $ntype);
     }
 
     // Expire is set
