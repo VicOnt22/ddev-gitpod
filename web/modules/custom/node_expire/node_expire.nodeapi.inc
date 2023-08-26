@@ -282,15 +282,25 @@ function _node_expire_node_delete(&$ntype, \Drupal\node\NodeInterface $node) {
 
 
 /**
- * Implements hook_form_alter().
+ * @param $ntype
+ * @param $ntypes
+ * @param $form
+ * @param $form_state
+ * @param $form_id
+ * @param \Drupal\node\NodeInterface $node
  *
- * Adds expiration options to the node entry forms
+ * @return void
  */
 function _node_expire_form_alter_nodeform(&$ntype, &$ntypes, &$form, &$form_state, $form_id, \Drupal\node\NodeInterface $node) {
   // Check if the Node expire feature is enabled for the node type.
 
+  $revision_ids = \Drupal::entityTypeManager()->getStorage('node')->revisionIds($node);
+  $last_revision_id = end($revision_ids);
+  $last_revision = \Drupal::entityTypeManager()->getStorage('node')->loadRevision($last_revision_id);
+  $last_revision->setSyncing(False);
+
   $handle_content_expiry = \Drupal::getContainer()->get('config.factory')->getEditable('node_expire.settings')->get('node_expire_handle_content_expiry');
-  $stop=1;
+
   if ($handle_content_expiry != 0) {
     if (empty($ntypes[$ntype]['enabled'])) {
       return;
@@ -299,7 +309,10 @@ function _node_expire_form_alter_nodeform(&$ntype, &$ntypes, &$form, &$form_stat
     if (!isset($node->expire)) {
       $ntype_expire = isset($ntypes[$ntype]) ? $ntypes[$ntype] : NULL; //vic to restore
       $node->expire = _node_expire_date_db_to_str('', $ntype_expire);
+
+//      $last_revision->expire = _node_expire_date_db_to_str('', $ntype_expire);
       $stop=1;
+
     }
 
   }
@@ -320,7 +333,7 @@ function _node_expire_form_alter_nodeform(&$ntype, &$ntypes, &$form, &$form_stat
   // This supports node to never expire.
 
   if(empty($ntypes[$ntype]['default']) && empty($node->expire)) {
-    $ntypes[$ntype]['required'] = FALSE; //vic to restore
+    $ntypes[$ntype]['required'] = FALSE;
   }
   if (\Drupal::currentUser()->hasPermission('edit node expire')) {
     if (_node_expire_get_date_entry_elements()) {
@@ -332,13 +345,11 @@ function _node_expire_form_alter_nodeform(&$ntype, &$ntypes, &$form, &$form_stat
             '%time' => \Drupal::service('date.formatter')->format(\Drupal::time()->getRequestTime(), 'custom', 'm/d/Y'),
           )
         ),
-//        '#type' => 'date_popup',
         '#type' => 'datetime',
         '#date_time_element' => 'none',
         '#date_format' => NODE_EXPIRE_FORMAT,
         '#required' => $ntypes[$ntype]['required'],
-//        '#default_value' => intval($node->expire),
-        '#default_value' => DrupalDateTime::createFromTimestamp(intval($node->expire)),
+        '#default_value' => DrupalDateTime::createFromTimestamp(intval($node->expire)), //maybe set for 0 to appear current date(or not-expire/max available NODE_EXPIRE_NO_EXPIRE) instead of 01-01-1969
       );
     }
     else {
@@ -357,6 +368,7 @@ function _node_expire_form_alter_nodeform(&$ntype, &$ntypes, &$form, &$form_stat
       );
     }
   }
+  //user does not have permission to edit node-expire field.
   else {
     $expire_field = array(
       '#type' => 'value',
@@ -364,8 +376,13 @@ function _node_expire_form_alter_nodeform(&$ntype, &$ntypes, &$form, &$form_stat
     );
   }
 
+  // If we use hidden value, do not create fieldset.
+   if ($expire_field['#type'] == 'value') {
+      $form['options1'] = array();
+      $form['options1']['expire'] = &$expire_field;
+    }
   // If the form doesn't have the publishing options we'll create our own.
-  if (empty($form['options']['#access'])) {
+  elseif (empty($form['options']['#access'])) {
     $form['options1'] = array(
       '#type' => 'fieldset',
       '#title' => t('Node Expire publishing option'),
@@ -375,15 +392,19 @@ function _node_expire_form_alter_nodeform(&$ntype, &$ntypes, &$form, &$form_stat
       '#group' => 'advanced',
     );
     $form['options1']['expire'] = &$expire_field;
+    $stop=1;
   }
   else {
-    $form['options']['expire'] = &$expire_field;
+    $form['options1']['expire'] = &$expire_field;
   }
 
   if (isset($node->expired)) {
-    $form['node_expire'] = array('#type' => 'value', '#value' => TRUE,); //just as flag? ...that 'node_expire' is in this form?
+    $form['node_expire'] = array(
+      '#type' => 'value',
+      '#value' => TRUE,); //just as flag? A hidden value used in line 371 above (for $node->expired we have this value)
   }
   $stop=1;
+
 }
 
 /**

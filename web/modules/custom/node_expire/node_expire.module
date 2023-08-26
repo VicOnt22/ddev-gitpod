@@ -21,7 +21,7 @@ const NODE_EXPIRE_FORMAT = 'Y-m-d';
 const NODE_EXPIRE_FORMAT_JS = 'yy-mm-dd';
 // define('NODE_EXPIRE_COMMON_DEFAULT_DATE', '2048-01-01');
 // Will be placed to the "expire" field corresponding empty
-// ("never expire") strings. 2461500000 is 2048-01-01.
+// ("never expire") strings. 2461500000 is 2037-12-01.
 const NODE_EXPIRE_NO_EXPIRE = 2145848400;
 
 /**
