@@ -293,7 +293,7 @@ function _node_expire_node_delete(&$ntype, \Drupal\node\NodeInterface $node) {
  *
  * @return void
  */
-function _node_expire_form_alter_nodeform(&$ntype, &$ntypes, &$form, &$form_state, $form_id, \Drupal\node\NodeInterface $node) {
+function _node_expire_form_alter_nodeform(&$ntype, &$ntypes, &$form, &$form_state, $form_id, \Drupal\node\NodeInterface &$node) {
   // Check if the Node expire feature is enabled for the node type.
 
   $revision_ids = \Drupal::entityTypeManager()->getStorage('node')->revisionIds($node);

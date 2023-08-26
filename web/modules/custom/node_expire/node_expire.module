@@ -349,7 +349,8 @@ $ntypes = \Drupal::getContainer()->get('config.factory')->getEditable('node_expi
   if (!isset($ntypes[$node->getType()])) {
     return;
   }
-  if (!$ntype = $ntypes[$node->getType()]) {
+  $ntype = $ntypes[$node->getType()];
+  if (!$ntype) {
     return;
   }
   \Drupal::moduleHandler()->loadInclude('node_expire', 'nodeapi.inc');
